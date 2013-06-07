@@ -46,7 +46,7 @@ subprojects { subproject ->
 		log4jVersion = '1.2.12'
 		mockitoVersion = '1.9.5'
 
-		springVersionDefault = '3.1.3.RELEASE'
+		springVersionDefault = '4.0.0.M1'
 		springVersion = project.hasProperty('springVersion') ? getProperty('springVersion') : springVersionDefault
 
 		springAmqpVersion = '1.2.0.M1'
@@ -466,6 +466,15 @@ project('spring-integration-sftp') {
 		compile "com.jcraft:jsch:0.1.49"
 		compile "org.springframework:spring-context-support:$springVersion"
 		compile("javax.activation:activation:$javaxActivationVersion", optional)
+		testCompile project(":spring-integration-test")
+	}
+}
+
+project('spring-integration-stomp') {
+	description = 'Spring Integration STOMP Support'
+	dependencies {
+		compile project(":spring-integration-core")
+		compile "org.springframework:spring-websocket:$springVersion"
 		testCompile project(":spring-integration-test")
 	}
 }
