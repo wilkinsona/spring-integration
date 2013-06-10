@@ -118,6 +118,11 @@ public class AbstractCorrelatingMessageHandlerTests {
 			public boolean send(Message<?> message) {
 				return this.send(message, 0);
 			}
+
+			@Override
+			public boolean send(org.springframework.messaging.Message<?> message) {
+				return send((Message<?>)message);
+			}
 		});
 		handler.setReleaseStrategy(new ReleaseStrategy() {
 
@@ -182,6 +187,11 @@ public class AbstractCorrelatingMessageHandlerTests {
 			public boolean send(Message<?> message) {
 				return this.send(message, 0);
 			}
+
+			@Override
+			public boolean send(org.springframework.messaging.Message<?> message) {
+				return send((Message<?>)message);
+			}
 		});
 		handler.setReleaseStrategy(new ReleaseStrategy() {
 
@@ -227,6 +237,11 @@ public class AbstractCorrelatingMessageHandlerTests {
 
 			public boolean send(Message<?> message) {
 				return this.send(message, 0);
+			}
+
+			@Override
+			public boolean send(org.springframework.messaging.Message<?> message) {
+				return send((Message<?>)message);
 			}
 		});
 		handler.setReleaseStrategy(new ReleaseStrategy() {

@@ -21,7 +21,7 @@ package org.springframework.integration;
  *
  * @author Mark Fisher
  */
-public interface MessageChannel {
+public interface MessageChannel extends org.springframework.messaging.MessageChannel {
 
 	/**
 	 * Send a {@link Message} to this channel. May throw a RuntimeException for

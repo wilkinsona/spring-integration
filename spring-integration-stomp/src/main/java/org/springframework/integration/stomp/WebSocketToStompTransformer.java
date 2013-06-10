@@ -24,7 +24,7 @@ import org.springframework.web.messaging.stomp.support.StompMessageConverter;
 /**
  * @author Andy Wilkinson
  */
-public final class StompInboundTransformer extends AbstractStompTransformer {
+public final class WebSocketToStompTransformer extends AbstractStompTransformer {
 
 	private final StompMessageConverter stompMessageConverter = new StompMessageConverter();
 

@@ -430,6 +430,11 @@ public class MessagingTemplate implements MessagingOperations, BeanFactoryAware,
 			return this.message;
 		}
 
+		@Override
+		public boolean send(org.springframework.messaging.Message<?> message) {
+			return send((Message<?>)message);
+		}
+
 		public boolean send(Message<?> message) {
 			return this.send(message, -1);
 		}

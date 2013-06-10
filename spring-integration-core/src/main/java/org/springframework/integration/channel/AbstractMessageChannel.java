@@ -40,7 +40,7 @@ import org.springframework.util.StringUtils;
  * properties such as the channel name. Also provides the common functionality
  * for sending and receiving {@link Message Messages} including the invocation
  * of any {@link ChannelInterceptor ChannelInterceptors}.
- * 
+ *
  * @author Mark Fisher
  * @author Oleg Zhurakousky
  */
@@ -66,7 +66,7 @@ public abstract class AbstractMessageChannel extends IntegrationObjectSupport im
 	/**
 	 * Specify the Message payload datatype(s) supported by this channel. If a
 	 * payload type does not match directly, but the 'conversionService' is
-	 * available, then type conversion will be attempted in the order of the 
+	 * available, then type conversion will be attempted in the order of the
 	 * elements provided in this array.
 	 * <p>
 	 * If this property is not set explicitly, any Message payload type will be
@@ -118,9 +118,9 @@ public abstract class AbstractMessageChannel extends IntegrationObjectSupport im
 	 * Send a message on this channel. If the channel is at capacity, this
 	 * method will block until either space becomes available or the sending
 	 * thread is interrupted.
-	 * 
+	 *
 	 * @param message the Message to send
-	 * 
+	 *
 	 * @return <code>true</code> if the message is sent successfully or
 	 * <code>false</code> if the sending thread is interrupted.
 	 */
@@ -134,10 +134,10 @@ public abstract class AbstractMessageChannel extends IntegrationObjectSupport im
 	 * is interrupted. If the specified timeout is 0, the method will return
 	 * immediately. If less than zero, it will block indefinitely (see
 	 * {@link #send(Message)}).
-	 * 
+	 *
 	 * @param message the Message to send
 	 * @param timeout the timeout in milliseconds
-	 * 
+	 *
 	 * @return <code>true</code> if the message is sent successfully,
 	 * <code>false</code> if the message cannot be sent within the allotted
 	 * time or the sending thread is interrupted.
@@ -185,8 +185,8 @@ public abstract class AbstractMessageChannel extends IntegrationObjectSupport im
 			}
 		}
 		throw new MessageDeliveryException(message, "Channel '" + this.getComponentName() +
-				"' expected one of the following datataypes [" + 
-				StringUtils.arrayToCommaDelimitedString(this.datatypes) + 
+				"' expected one of the following datataypes [" +
+				StringUtils.arrayToCommaDelimitedString(this.datatypes) +
 				"], but received [" + message.getPayload().getClass() + "]");
 	}
 
@@ -267,6 +267,16 @@ public abstract class AbstractMessageChannel extends IntegrationObjectSupport im
 				}
 			}
 			return message;
+		}
+	}
+
+
+	@Override
+	public boolean send(org.springframework.messaging.Message<?> message) {
+		if (message instanceof Message) {
+			return send((Message<?>)message);
+		} else {
+			return send(MessageBuilder.withPayload(message.getPayload()).copyHeaders(message.getHeaders()).build());
 		}
 	}
 }

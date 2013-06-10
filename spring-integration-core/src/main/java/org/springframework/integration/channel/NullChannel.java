@@ -27,7 +27,7 @@ import org.springframework.integration.core.PollableChannel;
  * All receive() calls will return <em>null</em>, and all send() calls
  * will return <em>true</em> although no action is performed.
  * Note however that the invocations are logged at debug-level.
- * 
+ *
  * @author Mark Fisher
  */
 public class NullChannel implements PollableChannel {
@@ -49,7 +49,7 @@ public class NullChannel implements PollableChannel {
 	public Message<?> receive() {
 		if (logger.isDebugEnabled()) {
 			logger.debug("receive called on null channel");
-		}		
+		}
 		return null;
 	}
 
@@ -57,4 +57,8 @@ public class NullChannel implements PollableChannel {
 		return this.receive();
 	}
 
+	@Override
+	public boolean send(org.springframework.messaging.Message<?> message) {
+		return send((Message<?>)message);
+	}
 }

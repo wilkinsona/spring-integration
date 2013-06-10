@@ -30,7 +30,7 @@ import org.springframework.web.messaging.stomp.support.StompMessageConverter;
 /**
  * @author Andy Wilkinson
  */
-public final class StompOutboundTransformer extends AbstractStompTransformer {
+public final class StompToWebSocketTransformer extends AbstractStompTransformer {
 
 	private final StompHeaderMapper stompHeaderMapper = new StompHeaderMapper();
 
@@ -40,7 +40,10 @@ public final class StompOutboundTransformer extends AbstractStompTransformer {
 	public Message<?> transform(Message<?> message) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try {
-			StompCommand command = (StompCommand) message.getHeaders().get(StompInboundTransformer.HEADER_COMMAND);
+			StompCommand command = (StompCommand) message.getHeaders().get(WebSocketToStompTransformer.HEADER_COMMAND);
+			if (command == null) {
+				command = StompCommand.MESSAGE;
+			}
 
 			StompHeaders headers = new StompHeaders();
 			this.stompHeaderMapper.fromMessageHeaders(message.getHeaders(), headers);

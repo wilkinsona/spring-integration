@@ -21,7 +21,7 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-public class WebSocketStompTests {
+public class BasicWebSocketStompTests {
 
 	private final StompHeaderMapper stompHeaderMapper = new StompHeaderMapper();
 

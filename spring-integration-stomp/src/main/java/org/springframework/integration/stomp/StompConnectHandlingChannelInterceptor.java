@@ -23,7 +23,7 @@ public final class StompConnectHandlingChannelInterceptor extends ChannelInterce
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (message.getHeaders().get(StompInboundTransformer.HEADER_COMMAND) == StompCommand.CONNECT) {
+		if (message.getHeaders().get(WebSocketToStompTransformer.HEADER_COMMAND) == StompCommand.CONNECT) {
 			WebSocketSession session = (WebSocketSession) message.getHeaders().get("web-socket-session");
 			StompHeaders connectHeaders = new StompHeaders();
 			this.stompHeaderMapper.fromMessageHeaders(message.getHeaders(), connectHeaders);
@@ -43,7 +43,7 @@ public final class StompConnectHandlingChannelInterceptor extends ChannelInterce
 			Message<String> connectedMessage = MessageBuilder.withPayload("") //
 				.copyHeaders(this.stompHeaderMapper.toMessageHeaders(connectedHeaders)) //
 				.setHeader("web-socket-session", session) //
-				.setHeader(StompInboundTransformer.HEADER_COMMAND, StompCommand.CONNECTED).build();
+				.setHeader(WebSocketToStompTransformer.HEADER_COMMAND, StompCommand.CONNECTED).build();
 
 			this.outputChannel.send(connectedMessage);
 		}

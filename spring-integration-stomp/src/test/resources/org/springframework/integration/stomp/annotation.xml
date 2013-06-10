@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:si="http://www.springframework.org/schema/integration"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
+
+	<si:channel id="websocket-input-channel"/>
+
+	<si:channel id="stomp-input-channel">
+		<si:interceptors>
+			<bean class="org.springframework.integration.stomp.StompConnectHandlingChannelInterceptor">
+				<constructor-arg ref="stomp-output-channel"/>
+			</bean>
+		</si:interceptors>
+	</si:channel>
+
+	<si:channel id="generic-output-channel"/>
+	
+	<si:channel id="stomp-output-channel"/>
+	
+	<si:channel id="websocket-output-channel"/>
+
+	<bean class="org.springframework.integration.websocket.WebSocketMessageDrivenEndpoint">
+		<constructor-arg ref="websocket-input-channel"/>
+	</bean>
+
+	<si:transformer input-channel="websocket-input-channel" output-channel="stomp-input-channel">
+		<bean class="org.springframework.integration.stomp.WebSocketToStompTransformer"/>
+	</si:transformer>
+
+	<si:transformer input-channel="stomp-output-channel" output-channel="websocket-output-channel">
+		<bean class="org.springframework.integration.stomp.StompToWebSocketTransformer"/>
+	</si:transformer>
+	
+	<si:transformer input-channel="generic-output-channel" output-channel="stomp-output-channel">
+		<bean class="org.springframework.integration.stomp.GenericToStompTransformer"/>
+	</si:transformer>
+
+	<bean class="org.springframework.integration.endpoint.EventDrivenConsumer">
+		<constructor-arg ref="stomp-input-channel"/>
+		<constructor-arg ref="inputMessageHandler"/>
+	</bean>
+
+	<bean class="org.springframework.integration.endpoint.EventDrivenConsumer">
+		<constructor-arg ref="websocket-output-channel"/>
+		<constructor-arg>
+			<bean class="org.springframework.integration.websocket.WebSocketOutboundHandler"/>
+		</constructor-arg>
+	</bean>
+
+	<bean id="inputMessageHandler" class="org.springframework.integration.stomp.service.MessageServiceMessageHandler">
+		<constructor-arg>
+			<bean class="org.springframework.integration.stomp.service.AnnotationMessageService">
+				<constructor-arg ref="generic-output-channel"/>
+			</bean>
+		</constructor-arg>
+	</bean>
+	
+	<bean class="org.springframework.integration.stomp.AnnotatedMessageHandler"/>
+
+</beans>
