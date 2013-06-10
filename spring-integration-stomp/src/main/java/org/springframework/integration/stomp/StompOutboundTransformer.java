@@ -17,41 +17,37 @@ package org.springframework.integration.stomp;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map.Entry;
+import java.nio.charset.Charset;
 
 import org.springframework.integration.Message;
 import org.springframework.integration.support.MessageBuilder;
+import org.springframework.web.messaging.stomp.StompCommand;
+import org.springframework.web.messaging.stomp.StompHeaders;
+import org.springframework.web.messaging.stomp.StompMessage;
+import org.springframework.web.messaging.stomp.support.StompHeaderMapper;
+import org.springframework.web.messaging.stomp.support.StompMessageConverter;
 
 /**
- * @author Gary Russell
  * @author Andy Wilkinson
  */
 public final class StompOutboundTransformer extends AbstractStompTransformer {
 
+	private final StompHeaderMapper stompHeaderMapper = new StompHeaderMapper();
+
+	private final StompMessageConverter stompMessageConverter = new StompMessageConverter();
+
 	@Override
 	public Message<?> transform(Message<?> message) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		StompCommand command = (StompCommand) message.getHeaders().get(StompInboundTransformer.HEADER_COMMAND);
 		try {
-			outputStream.write(command.toString().getBytes(HEADER_CHARSET));
-			outputStream.write(LF);
+			StompCommand command = (StompCommand) message.getHeaders().get(StompInboundTransformer.HEADER_COMMAND);
 
-			StompHeaders headers = (StompHeaders) message.getHeaders().get(HEADER_HEADERS);
+			StompHeaders headers = new StompHeaders();
+			this.stompHeaderMapper.fromMessageHeaders(message.getHeaders(), headers);
 
-			for (Entry<String, List<String>> entry : headers.entrySet()) {
-				String key = entry.getKey();
-				key = replaceAllOutbound(key);
-				for (String value : entry.getValue()) {
-					outputStream.write(key.getBytes("UTF-8"));
-					outputStream.write(HEADER_SEPARATOR);
-					value = replaceAllOutbound(value);
-					outputStream.write(value.getBytes("UTF-8"));
-					outputStream.write(LF);
-				}
-			}
-			outputStream.write(LF);
-			outputStream.write(0);
+			byte[] payload = getPayloadAsByteArray(message);
+
+			outputStream.write(this.stompMessageConverter.fromStompMessage(new StompMessage(command, headers, payload)));
 		}
 		catch (IOException e) {
 			throw new StompException("Failed to serialize " + message, e);
@@ -59,10 +55,16 @@ public final class StompOutboundTransformer extends AbstractStompTransformer {
 		return MessageBuilder.withPayload(outputStream.toByteArray()).copyHeaders(message.getHeaders()).build();
 	}
 
-	private String replaceAllOutbound(String string) {
-		return string.replaceAll("\\\\", "\\\\")
-				.replaceAll(":", "\\\\c")
-				.replaceAll("\n", "\\\\n")
-				.replaceAll("\r", "\\\\r");
+	private byte[] getPayloadAsByteArray(Message<?> message) {
+		byte[] payload;
+
+		if (message.getPayload() instanceof String) {
+			payload = ((String)message.getPayload()).getBytes(Charset.forName("UTF-8"));
+		} else if (message.getPayload() instanceof byte[]) {
+			payload = (byte[])message.getPayload();
+		} else {
+			throw new IllegalArgumentException("Payload of 'message' must be a String or a byte[]");
+		}
+		return payload;
 	}
 }

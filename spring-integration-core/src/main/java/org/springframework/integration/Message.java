@@ -18,14 +18,12 @@ package org.springframework.integration;
 
 /**
  * The central interface that any Message type must implement.
- * 
+ *
  * @author Mark Fisher
  * @author Arjen Poutsma
  */
-public interface Message<T> {
+public interface Message<T> extends org.springframework.messaging.Message<T> {
 
 	MessageHeaders getHeaders();
-
-	T getPayload();
 
 }

@@ -16,89 +16,48 @@
 
 package org.springframework.integration.message;
 
-import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.integration.Message;
 import org.springframework.integration.MessageHeaders;
-import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 
 /**
  * Base Message class defining common properties such as id, payload, and headers.
  * Once created this object is immutable.
- * 
+ *
  * @author Mark Fisher
  */
-public class GenericMessage<T> implements Message<T>, Serializable {
+public class GenericMessage<T> extends org.springframework.messaging.GenericMessage<T> implements Message<T> {
 
 	private static final long serialVersionUID = 3649200745084232821L;
 
-	private final T payload;
-
-	private final MessageHeaders headers;
-
+	private final MessageHeaders messageHeaders;
 
 	/**
 	 * Create a new message with the given payload.
-	 * 
+	 *
 	 * @param payload the message payload
 	 */
 	public GenericMessage(T payload) {
-		this(payload, null);
+		super(payload);
+		this.messageHeaders = new MessageHeaders(super.getHeaders());
 	}
 
 	/**
 	 * Create a new message with the given payload. The provided map
 	 * will be used to populate the message headers
-	 * 
+	 *
 	 * @param payload the message payload
 	 * @param headers message headers
 	 * @see MessageHeaders
 	 */
 	public GenericMessage(T payload, Map<String, Object> headers) {
-		Assert.notNull(payload, "payload must not be null");
-		if (headers == null) {
-			headers = new HashMap<String, Object>();
-		}
-		else {
-			headers = new HashMap<String, Object>(headers);
-		}
-		this.headers = new MessageHeaders(headers);
-		this.payload = payload;
+		super(payload, headers);
+		this.messageHeaders = new MessageHeaders(super.getHeaders());
 	}
 
-
+	@Override
 	public MessageHeaders getHeaders() {
-		return this.headers;
+		return messageHeaders;
 	}
-
-	public T getPayload() {
-		return this.payload;
-	}
-
-	public String toString() {
-		return "[Payload=" + this.payload + "][Headers=" + this.headers + "]";
-	}
-
-	public int hashCode() {
-		return this.headers.hashCode() * 23 + ObjectUtils.nullSafeHashCode(this.payload);
-	}
-
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj != null && obj instanceof GenericMessage<?>) {
-			GenericMessage<?> other = (GenericMessage<?>) obj;
-			if (!this.headers.getId().equals(other.headers.getId())) {
-				return false;
-			}
-			return this.headers.equals(other.headers)
-					&& this.payload.equals(other.payload);
-		}
-		return false;
-	}
-
 }

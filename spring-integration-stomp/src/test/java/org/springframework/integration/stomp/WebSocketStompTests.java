@@ -14,11 +14,16 @@ import org.springframework.integration.Message;
 import org.springframework.integration.MessageHeaders;
 import org.springframework.integration.websocket.TestMessageHandler;
 import org.springframework.integration.websocket.WebSocketMessageDrivenEndpoint;
+import org.springframework.web.messaging.stomp.StompCommand;
+import org.springframework.web.messaging.stomp.StompHeaders;
+import org.springframework.web.messaging.stomp.support.StompHeaderMapper;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 public class WebSocketStompTests {
+
+	private final StompHeaderMapper stompHeaderMapper = new StompHeaderMapper();
 
 	@Test
 	public void connectCommand() throws Exception {
@@ -34,10 +39,11 @@ public class WebSocketStompTests {
 		Message<?> message = inputHandler.getMessage();
 		MessageHeaders messageHeaders = message.getHeaders();
 
-		assertEquals(StompCommand.CONNECT, messageHeaders.get("__stomp-command"));
-		StompHeaders headers = (StompHeaders) messageHeaders.get("__stomp-headers");
-		assertEquals("1.2", headers.getFirst("accept-version"));
-		assertEquals("stomp.github.org", headers.getFirst("host"));
+		assertEquals(StompCommand.CONNECT, messageHeaders.get("stompCommand"));
+		StompHeaders stompHeaders = getStompHeaders(messageHeaders);
+
+		assertEquals("1.2", stompHeaders.getFirst("accept-version"));
+		assertEquals("stomp.github.org", stompHeaders.getFirst("host"));
 		assertEquals(0, ((byte[])message.getPayload()).length);
 
 		verify(session).sendMessage(any(BinaryMessage.class));
@@ -57,8 +63,9 @@ public class WebSocketStompTests {
 		Message<?> message = inputHandler.getMessage();
 		MessageHeaders messageHeaders = message.getHeaders();
 
-		assertEquals(StompCommand.SEND, messageHeaders.get("__stomp-command"));
-		StompHeaders headers = (StompHeaders) messageHeaders.get("__stomp-headers");
+		assertEquals(StompCommand.SEND, messageHeaders.get("stompCommand"));
+		StompHeaders headers = getStompHeaders(messageHeaders);
+
 		assertEquals("/queue/a", headers.getDestination());
 		assertEquals(MediaType.TEXT_PLAIN, headers.getContentType());
 		assertEquals("hello queue a", new String((byte[])message.getPayload()));
@@ -66,4 +73,9 @@ public class WebSocketStompTests {
 		verifyNoMoreInteractions(session);
 	}
 
+	private StompHeaders getStompHeaders(MessageHeaders messageHeaders) {
+		StompHeaders stompHeaders = new StompHeaders();
+		this.stompHeaderMapper.fromMessageHeaders(messageHeaders, stompHeaders);
+		return stompHeaders;
+	}
 }
