@@ -8,12 +8,8 @@ import org.springframework.integration.channel.interceptor.ChannelInterceptorAda
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.web.messaging.stomp.StompCommand;
 import org.springframework.web.messaging.stomp.StompHeaders;
-import org.springframework.web.messaging.stomp.support.StompHeaderMapper;
-import org.springframework.web.socket.WebSocketSession;
 
 public final class StompConnectHandlingChannelInterceptor extends ChannelInterceptorAdapter {
-
-	private final StompHeaderMapper stompHeaderMapper = new StompHeaderMapper();
 
 	private final MessageChannel outputChannel;
 
@@ -23,12 +19,10 @@ public final class StompConnectHandlingChannelInterceptor extends ChannelInterce
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		if (message.getHeaders().get(WebSocketToStompTransformer.HEADER_COMMAND) == StompCommand.CONNECT) {
-			WebSocketSession session = (WebSocketSession) message.getHeaders().get("web-socket-session");
-			StompHeaders connectHeaders = new StompHeaders();
-			this.stompHeaderMapper.fromMessageHeaders(message.getHeaders(), connectHeaders);
+		StompHeaders connectHeaders = new StompHeaders(message.getHeaders(), false);
+		if (connectHeaders.getProtocolMessageType() == StompCommand.CONNECT) {
 
-			StompHeaders connectedHeaders = new StompHeaders();
+			StompHeaders connectedHeaders = new StompHeaders(StompCommand.CONNECTED);
 			Set<String> acceptVersions = connectHeaders.getAcceptVersion();
 			if (acceptVersions.contains("1.2")) {
 				connectedHeaders.setVersion("1.2");
@@ -39,11 +33,13 @@ public final class StompConnectHandlingChannelInterceptor extends ChannelInterce
 			else if (acceptVersions.isEmpty()) {
 				// 1.0
 			}
+			connectedHeaders.setHeartbeat(0, 0);
 
-			Message<String> connectedMessage = MessageBuilder.withPayload("") //
-				.copyHeaders(this.stompHeaderMapper.toMessageHeaders(connectedHeaders)) //
-				.setHeader("web-socket-session", session) //
-				.setHeader(WebSocketToStompTransformer.HEADER_COMMAND, StompCommand.CONNECTED).build();
+			connectedHeaders.setSessionId(connectHeaders.getSessionId());
+
+			Message<String> connectedMessage = MessageBuilder.withPayload("")
+				.copyHeaders(connectedHeaders.getMessageHeaders())
+				.build();
 
 			this.outputChannel.send(connectedMessage);
 		}

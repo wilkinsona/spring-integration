@@ -22,7 +22,8 @@ public final class WebSocketTests {
 
 		endpoint.handleMessage(session, message);
 
-		assertEquals(message, handler.getMessage().getPayload());
-	}
+		assertNotNull(handler.getMessage());
 
+		assertEquals("test", handler.getMessage().getPayload());
+	}
 }

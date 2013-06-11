@@ -17,8 +17,7 @@ package org.springframework.integration.stomp;
 
 import org.springframework.integration.Message;
 import org.springframework.integration.support.MessageBuilder;
-import org.springframework.web.messaging.stomp.StompMessage;
-import org.springframework.web.messaging.stomp.support.StompHeaderMapper;
+import org.springframework.web.messaging.stomp.StompConversionException;
 import org.springframework.web.messaging.stomp.support.StompMessageConverter;
 
 /**
@@ -28,17 +27,18 @@ public final class WebSocketToStompTransformer extends AbstractStompTransformer 
 
 	private final StompMessageConverter stompMessageConverter = new StompMessageConverter();
 
-	private final StompHeaderMapper stompHeaderMapper = new StompHeaderMapper();
-
 	@Override
 	public Message<?> transform(Message<?> message) {
 
-		StompMessage stompMessage = this.stompMessageConverter.toStompMessage(message.getPayload());
+		try {
+			org.springframework.messaging.Message<byte[]> stompMessage = this.stompMessageConverter.toMessage(message.getPayload(), (String)message.getHeaders().get("sessionId"));
 
-		return MessageBuilder.withPayload(stompMessage.getPayload()) //
-			.copyHeaders(message.getHeaders()) //
-			.copyHeaders(stompHeaderMapper.toMessageHeaders(stompMessage.getHeaders())) //
-			.setHeader(HEADER_COMMAND, stompMessage.getCommand()) //
-			.build();
+			return MessageBuilder.withPayload(stompMessage.getPayload())
+				.copyHeaders(stompMessage.getHeaders())
+				.build();
+		} catch (StompConversionException sce) {
+			// TODO A heartbeat (a single EOL character) will cause a StompConversionException, but so will a corrupted frame.
+			return null;
+		}
 	}
 }

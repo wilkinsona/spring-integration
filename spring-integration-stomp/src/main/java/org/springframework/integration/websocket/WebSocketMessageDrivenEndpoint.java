@@ -12,8 +12,11 @@ public class WebSocketMessageDrivenEndpoint extends AbstractEndpoint implements 
 
 	private final MessageChannel outputChannel;
 
-	public WebSocketMessageDrivenEndpoint(MessageChannel outputChannel) {
+	private final SessionManager sessionManager;
+
+	public WebSocketMessageDrivenEndpoint(MessageChannel outputChannel, SessionManager sessionManager) {
 		this.outputChannel = outputChannel;
+		this.sessionManager = sessionManager;
 	}
 
 	@Override
@@ -26,11 +29,12 @@ public class WebSocketMessageDrivenEndpoint extends AbstractEndpoint implements 
 
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+		this.sessionManager.storeSession(session);
 	}
 
 	@Override
 	public void handleMessage(WebSocketSession session, WebSocketMessage<?> webSocketMessage) throws Exception {
-		this.outputChannel.send(MessageBuilder.withPayload(webSocketMessage.getPayload()).setHeader("web-socket-session", session).build());
+		this.outputChannel.send(MessageBuilder.withPayload(webSocketMessage.getPayload()).setHeader("sessionId", session.getId()).build());
 	}
 
 	@Override
@@ -40,7 +44,7 @@ public class WebSocketMessageDrivenEndpoint extends AbstractEndpoint implements 
 
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-
+		this.sessionManager.removeSession(session.getId());
 	}
 
 	@Override

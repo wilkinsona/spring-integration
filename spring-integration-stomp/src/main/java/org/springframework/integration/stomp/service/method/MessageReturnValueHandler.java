@@ -16,15 +16,12 @@
 
 package org.springframework.integration.stomp.service.method;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.messaging.GenericMessage;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.util.Assert;
+import org.springframework.web.messaging.PubSubHeaders;
 import org.springframework.web.messaging.service.method.ReturnValueHandler;
 
 
@@ -34,15 +31,11 @@ import org.springframework.web.messaging.service.method.ReturnValueHandler;
  */
 public class MessageReturnValueHandler implements ReturnValueHandler {
 
-	private static Log logger = LogFactory.getLog(MessageReturnValueHandler.class);
-
 	private final MessageChannel replyChannel;
-
 
 	public MessageReturnValueHandler(MessageChannel replyChannel) {
 		this.replyChannel = replyChannel;
 	}
-
 
 	@Override
 	public boolean supportsReturnType(MethodParameter returnType) {
@@ -70,14 +63,22 @@ public class MessageReturnValueHandler implements ReturnValueHandler {
 			return;
 		}
 
-		if (logger.isTraceEnabled()) {
-			logger.trace("Sending notification: " + message);
+		PubSubHeaders inHeaders = new PubSubHeaders(message.getHeaders(), true);
+		String sessionId = inHeaders.getSessionId();
+		String subscriptionId = inHeaders.getSubscriptionId();
+		Assert.notNull(sessionId, "No session id: " + message);
+		Assert.notNull(subscriptionId, "No subscription id: " + message);
+
+		PubSubHeaders outHeaders = new PubSubHeaders(returnMessage.getHeaders(), false);
+		outHeaders.setSessionId(sessionId);
+		outHeaders.setSubscriptionId(subscriptionId);
+		if (outHeaders.getDestination() == null) {
+			outHeaders.setDestination(inHeaders.getDestination());
 		}
 
-		Map<String, Object> headers = new HashMap<String, Object>(returnMessage.getHeaders());
-		headers.put("originalMessage", message);
+		returnMessage = new GenericMessage<Object>(returnMessage.getPayload(), outHeaders.getMessageHeaders());
 
-		this.replyChannel.send(new GenericMessage<Object>(returnMessage.getPayload(), headers));
+		this.replyChannel.send(returnMessage);
  	}
 
 }

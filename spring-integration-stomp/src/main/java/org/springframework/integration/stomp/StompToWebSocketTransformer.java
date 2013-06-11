@@ -15,16 +15,18 @@
  */
 package org.springframework.integration.stomp;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.http.MediaType;
 import org.springframework.integration.Message;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.web.messaging.stomp.StompCommand;
+import org.springframework.integration.MessagingException;
+import org.springframework.integration.message.GenericMessage;
+import org.springframework.web.messaging.converter.CompositeMessageConverter;
+import org.springframework.web.messaging.converter.MessageConverter;
 import org.springframework.web.messaging.stomp.StompHeaders;
-import org.springframework.web.messaging.stomp.StompMessage;
-import org.springframework.web.messaging.stomp.support.StompHeaderMapper;
 import org.springframework.web.messaging.stomp.support.StompMessageConverter;
 
 /**
@@ -32,42 +34,32 @@ import org.springframework.web.messaging.stomp.support.StompMessageConverter;
  */
 public final class StompToWebSocketTransformer extends AbstractStompTransformer {
 
-	private final StompHeaderMapper stompHeaderMapper = new StompHeaderMapper();
+	private final Log logger = LogFactory.getLog(getClass());
+
+	private MessageConverter payloadConverter = new CompositeMessageConverter(null);
 
 	private final StompMessageConverter stompMessageConverter = new StompMessageConverter();
 
 	@Override
 	public Message<?> transform(Message<?> message) {
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		try {
-			StompCommand command = (StompCommand) message.getHeaders().get(WebSocketToStompTransformer.HEADER_COMMAND);
-			if (command == null) {
-				command = StompCommand.MESSAGE;
-			}
+		StompHeaders stompHeaders = new StompHeaders(message.getHeaders(), false);
 
-			StompHeaders headers = new StompHeaders();
-			this.stompHeaderMapper.fromMessageHeaders(message.getHeaders(), headers);
-
-			byte[] payload = getPayloadAsByteArray(message);
-
-			outputStream.write(this.stompMessageConverter.fromStompMessage(new StompMessage(command, headers, payload)));
-		}
-		catch (IOException e) {
-			throw new StompException("Failed to serialize " + message, e);
-		}
-		return MessageBuilder.withPayload(outputStream.toByteArray()).copyHeaders(message.getHeaders()).build();
-	}
-
-	private byte[] getPayloadAsByteArray(Message<?> message) {
 		byte[] payload;
-
-		if (message.getPayload() instanceof String) {
-			payload = ((String)message.getPayload()).getBytes(Charset.forName("UTF-8"));
-		} else if (message.getPayload() instanceof byte[]) {
-			payload = (byte[])message.getPayload();
-		} else {
-			throw new IllegalArgumentException("Payload of 'message' must be a String or a byte[]");
+		try {
+			MediaType contentType = stompHeaders.getContentType();
+			payload = payloadConverter.convertToPayload(message.getPayload(), contentType);
 		}
-		return payload;
+		catch (Exception e) {
+			logger.error("Failed to send " + message, e);
+			throw new MessagingException(message, e);
+		}
+
+		Map<String, Object> messageHeaders = new HashMap<String, Object>(stompHeaders.getMessageHeaders());
+		messageHeaders.putAll(stompHeaders.getRawHeaders());
+
+		Message<byte[]> byteMessage = new GenericMessage<byte[]>(payload, messageHeaders);
+		byte[] bytes = stompMessageConverter.fromMessage(byteMessage);
+
+		return new GenericMessage<byte[]>(bytes, messageHeaders);
 	}
 }

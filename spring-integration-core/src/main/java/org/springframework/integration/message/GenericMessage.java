@@ -16,6 +16,7 @@
 
 package org.springframework.integration.message;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.integration.Message;
@@ -31,16 +32,13 @@ public class GenericMessage<T> extends org.springframework.messaging.GenericMess
 
 	private static final long serialVersionUID = 3649200745084232821L;
 
-	private final MessageHeaders messageHeaders;
-
 	/**
 	 * Create a new message with the given payload.
 	 *
 	 * @param payload the message payload
 	 */
 	public GenericMessage(T payload) {
-		super(payload);
-		this.messageHeaders = new MessageHeaders(super.getHeaders());
+		this(payload, null);
 	}
 
 	/**
@@ -52,12 +50,12 @@ public class GenericMessage<T> extends org.springframework.messaging.GenericMess
 	 * @see MessageHeaders
 	 */
 	public GenericMessage(T payload, Map<String, Object> headers) {
-		super(payload, headers);
-		this.messageHeaders = new MessageHeaders(super.getHeaders());
+		// TODO Need a better way of ensuring that the message headers are the correct type
+		super(new MessageHeaders(headers == null ? new HashMap<String, Object>() : new HashMap<String, Object>(headers)), payload);
 	}
 
 	@Override
 	public MessageHeaders getHeaders() {
-		return messageHeaders;
+		return (MessageHeaders)super.getHeaders();
 	}
 }

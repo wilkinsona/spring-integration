@@ -30,6 +30,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.integration.stomp.service.method.MessageChannelArgumentResolver;
 import org.springframework.integration.stomp.service.method.MessageReturnValueHandler;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -37,6 +38,7 @@ import org.springframework.messaging.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils.MethodFilter;
+import org.springframework.web.messaging.PubSubHeaders;
 import org.springframework.web.messaging.annotation.SubscribeEvent;
 import org.springframework.web.messaging.annotation.UnsubscribeEvent;
 import org.springframework.web.messaging.converter.MessageConverter;
@@ -70,8 +72,11 @@ public class AnnotationMessageService extends AbstractMessageService implements 
 
 	private final MessageChannel replyChannel;
 
-	public AnnotationMessageService(MessageChannel replyChannel) {
+	private final MessageChannel relayChannel;
+
+	public AnnotationMessageService(MessageChannel replyChannel, MessageChannel relayChannel) {
 		this.replyChannel = replyChannel;
+		this.relayChannel = relayChannel;
 	}
 
 	public void setMessageConverters(List<MessageConverter> converters) {
@@ -86,9 +91,9 @@ public class AnnotationMessageService extends AbstractMessageService implements 
 	@Override
 	public void afterPropertiesSet() {
 		initHandlerMethods();
-		// this.argumentResolvers.addResolver(new MessageChannelArgumentResolver(getEventBus()));
+		this.argumentResolvers.addResolver(new MessageChannelArgumentResolver(this.relayChannel));
 		this.argumentResolvers.addResolver(new MessageBodyArgumentResolver(this.messageConverters));
-		this.returnValueHandlers.addHandler(new MessageReturnValueHandler(replyChannel));
+		this.returnValueHandlers.addHandler(new MessageReturnValueHandler(this.replyChannel));
 	}
 
 	protected void initHandlerMethods() {
@@ -170,7 +175,8 @@ public class AnnotationMessageService extends AbstractMessageService implements 
 
 	private void handleMessage(final Message<?> message, Map<MappingInfo, HandlerMethod> handlerMethods) {
 
-		String destination = (String) message.getHeaders().get("destination");
+		PubSubHeaders headers = new PubSubHeaders(message.getHeaders(), true);
+		String destination = headers.getDestination();
 
 		HandlerMethod match = getHandlerMethod(destination, handlerMethods);
 		if (match == null) {
@@ -201,6 +207,8 @@ public class AnnotationMessageService extends AbstractMessageService implements 
 	}
 
 	protected HandlerMethod getHandlerMethod(String destination, Map<MappingInfo, HandlerMethod> handlerMethods) {
+		logger.debug("Finding handler for '" + destination + "' from '" + handlerMethods + "'");
+
 		for (MappingInfo key : handlerMethods.keySet()) {
 			for (String mappingDestination : key.getDestinations()) {
 				if (destination.equals(mappingDestination)) {

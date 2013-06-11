@@ -5,21 +5,27 @@ import java.io.IOException;
 import org.springframework.integration.Message;
 import org.springframework.integration.MessagingException;
 import org.springframework.integration.core.MessageHandler;
-import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 public final class WebSocketOutboundHandler implements MessageHandler {
 
+	private final SessionManager sessionManager;
+
+	public WebSocketOutboundHandler(SessionManager sessionManager) {
+		this.sessionManager = sessionManager;
+	}
+
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
-		WebSocketSession session = (WebSocketSession) message.getHeaders().get("web-socket-session");
+		WebSocketSession session = sessionManager.retrieveSession((String)message.getHeaders().get("sessionId"));
 		try {
 			WebSocketMessage<?> webSocketMessage;
 			Object payload = message.getPayload();
 			if (payload instanceof byte[]) {
-				webSocketMessage = new BinaryMessage((byte[])payload);
+				// TODO AbstractSockJsSession can only handle TextMessages, but this may mangle the message
+				webSocketMessage = new TextMessage(new String((byte[])payload));
 			} else if (payload instanceof CharSequence) {
 				webSocketMessage = new TextMessage((CharSequence)payload);
 			} else {

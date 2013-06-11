@@ -1,10 +1,9 @@
 package org.springframework.integration.stomp;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.messaging.GenericMessage;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.messaging.annotation.SubscribeEvent;
 
@@ -15,9 +14,8 @@ public class AnnotatedMessageHandler {
 
 	public int bravoCount = 0;
 
-	public int charlieCount = 0;
-
 	@SubscribeEvent("/queue/alpha")
+	@MessageMapping("/queue/alpha")
 	public void alpha() {
 		alphaCount++;
 	}
@@ -27,11 +25,4 @@ public class AnnotatedMessageHandler {
 		bravoCount++;
 		return new GenericMessage<String>("response");
 	}
-
-	@SubscribeEvent("/queue/charlie")
-	public List<String> charlie() {
-		charlieCount++;
-		return Arrays.asList("response-1", "response-2");
-	}
-
 }

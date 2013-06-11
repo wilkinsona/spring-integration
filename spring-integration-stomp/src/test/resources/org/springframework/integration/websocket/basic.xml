@@ -6,9 +6,12 @@
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
 
 	<si:channel id="channel"/>
+	
+	<bean id="sessionManager" class="org.springframework.integration.websocket.StandardSessionManager"/>
 
 	<bean class="org.springframework.integration.websocket.WebSocketMessageDrivenEndpoint">
 		<constructor-arg ref="channel"/>
+		<constructor-arg ref="sessionManager"/>
 	</bean>
 
 	<si:service-activator input-channel="channel" ref="messageHandler"/>

@@ -4,6 +4,8 @@
 	xmlns:si="http://www.springframework.org/schema/integration"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
+		
+	<bean id="sessionManager" class="org.springframework.integration.websocket.StandardSessionManager"/>
 
 	<si:channel id="websocket-input-channel"/>
 
@@ -21,14 +23,15 @@
 
 	<bean class="org.springframework.integration.websocket.WebSocketMessageDrivenEndpoint">
 		<constructor-arg ref="websocket-input-channel"/>
+		<constructor-arg ref="sessionManager"/>
 	</bean>
 
 	<si:transformer input-channel="websocket-input-channel" output-channel="stomp-input-channel">
-		<bean class="org.springframework.integration.stomp.StompInboundTransformer"/>
+		<bean class="org.springframework.integration.stomp.WebSocketToStompTransformer"/>
 	</si:transformer>
 
 	<si:transformer input-channel="stomp-output-channel" output-channel="websocket-output-channel">
-		<bean class="org.springframework.integration.stomp.StompOutboundTransformer"/>
+		<bean class="org.springframework.integration.stomp.StompToWebSocketTransformer"/>
 	</si:transformer>
 
 	<bean class="org.springframework.integration.endpoint.EventDrivenConsumer">
@@ -39,7 +42,9 @@
 	<bean class="org.springframework.integration.endpoint.EventDrivenConsumer">
 		<constructor-arg ref="websocket-output-channel"/>
 		<constructor-arg>
-			<bean class="org.springframework.integration.websocket.WebSocketOutboundHandler"/>
+			<bean class="org.springframework.integration.websocket.WebSocketOutboundHandler">
+				<constructor-arg ref="sessionManager"/>
+			</bean>
 		</constructor-arg>
 	</bean>
 

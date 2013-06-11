@@ -55,9 +55,9 @@ public final class MessageHeaders extends org.springframework.messaging.MessageH
 
 	public static final String CORRELATION_ID = "correlationId";
 
-	public static final String REPLY_CHANNEL = org.springframework.messaging.MessageHeaders.REPLY_CHANNEL;
+	public static final String REPLY_CHANNEL = "replyChannel";
 
-	public static final String ERROR_CHANNEL = org.springframework.messaging.MessageHeaders.ERROR_CHANNEL;
+	public static final String ERROR_CHANNEL = "errorChannel";
 
 	public static final String EXPIRATION_DATE = "expirationDate";
 
@@ -69,7 +69,7 @@ public final class MessageHeaders extends org.springframework.messaging.MessageH
 
 	public static final String SEQUENCE_DETAILS = "sequenceDetails";
 
-	public static final String CONTENT_TYPE = org.springframework.messaging.MessageHeaders.CONTENT_TYPE;
+	public static final String CONTENT_TYPE = "contentType";
 
 	public static final String POSTPROCESS_RESULT = "postProcessResult";
 
@@ -98,6 +98,14 @@ public final class MessageHeaders extends org.springframework.messaging.MessageH
 	public Integer getPriority() {
 		return this.get(PRIORITY, Integer.class);
 	}
+
+	public Object getReplyChannel() {
+        return this.get(REPLY_CHANNEL);
+    }
+
+    public Object getErrorChannel() {
+        return this.get(ERROR_CHANNEL);
+    }
 
 	public static interface IdGenerator extends org.springframework.messaging.MessageHeaders.IdGenerator {
 

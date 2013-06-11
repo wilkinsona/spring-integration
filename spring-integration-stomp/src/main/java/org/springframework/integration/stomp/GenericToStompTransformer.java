@@ -5,39 +5,33 @@ import org.springframework.integration.support.MessageBuilder;
 import org.springframework.integration.transformer.Transformer;
 import org.springframework.web.messaging.stomp.StompCommand;
 import org.springframework.web.messaging.stomp.StompHeaders;
-import org.springframework.web.messaging.stomp.support.StompHeaderMapper;
 
 public class GenericToStompTransformer implements Transformer {
 
-	private final StompHeaderMapper stompHeaderMapper = new StompHeaderMapper();
-
 	@Override
 	public Message<?> transform(Message<?> message) {
-		StompHeaders stompHeaders = new StompHeaders();
-		this.stompHeaderMapper.fromMessageHeaders(message.getHeaders(), stompHeaders);
 
-		Message<?> originalMessage = (Message<?>) message.getHeaders().get("originalMessage");
-
-		StompHeaders originalStompHeaders = new StompHeaders();
-		this.stompHeaderMapper.fromMessageHeaders(originalMessage.getHeaders(), originalStompHeaders);
-
-		if (stompHeaders.getSubscription() == null) {
-			stompHeaders.setSubscription(originalStompHeaders.getId());
+		StompHeaders stompHeaders = new StompHeaders(message.getHeaders(), false);
+		if (stompHeaders.getProtocolMessageType() == null) {
+			stompHeaders.setProtocolMessageType(StompCommand.MESSAGE);
 		}
 
-		if (stompHeaders.getDestination() == null) {
-			stompHeaders.setDestination(originalStompHeaders.getDestination());
+		// TODO Proper heartbeat handling
+		if (stompHeaders.getHeartbeat() == null) {
+			stompHeaders.setHeartbeat(0, 0);
 		}
 
-		StompCommand command = (StompCommand) message.getHeaders().get("stompCommand");
-		if (command == null) {
-			command = StompCommand.MESSAGE;
+		// TODO Remove once using Rossen's update that handles this automatically
+		if (stompHeaders.getMessageId() == null) {
+			stompHeaders.setMessageId(message.getHeaders().getId().toString());
 		}
 
+		stompHeaders.setSubscriptionId((String)message.getHeaders().get("subscriptionId"));
+
+		// TODO need both raw and message headers to make sure all headers are retained. Is this the right approach?
 		return MessageBuilder.withPayload(message.getPayload())
-			.copyHeaders(stompHeaderMapper.toMessageHeaders(stompHeaders))
-			.setHeader("stompCommand",  command)
-			.setHeader("web-socket-session", originalMessage.getHeaders().get("web-socket-session"))
+			.copyHeaders(stompHeaders.getRawHeaders())
+			.copyHeaders(stompHeaders.getMessageHeaders())
 			.build();
 	}
 

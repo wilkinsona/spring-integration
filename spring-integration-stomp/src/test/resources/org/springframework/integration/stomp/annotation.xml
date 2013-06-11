@@ -2,9 +2,13 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:si="http://www.springframework.org/schema/integration"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd">
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
+	<bean id="sessionManager" class="org.springframework.integration.websocket.StandardSessionManager"/>
+	
 	<si:channel id="websocket-input-channel"/>
 
 	<si:channel id="stomp-input-channel">
@@ -16,13 +20,12 @@
 	</si:channel>
 
 	<si:channel id="generic-output-channel"/>
-	
 	<si:channel id="stomp-output-channel"/>
-	
 	<si:channel id="websocket-output-channel"/>
-
+	
 	<bean class="org.springframework.integration.websocket.WebSocketMessageDrivenEndpoint">
 		<constructor-arg ref="websocket-input-channel"/>
+		<constructor-arg ref="sessionManager"/>
 	</bean>
 
 	<si:transformer input-channel="websocket-input-channel" output-channel="stomp-input-channel">
@@ -45,14 +48,19 @@
 	<bean class="org.springframework.integration.endpoint.EventDrivenConsumer">
 		<constructor-arg ref="websocket-output-channel"/>
 		<constructor-arg>
-			<bean class="org.springframework.integration.websocket.WebSocketOutboundHandler"/>
+			<bean class="org.springframework.integration.websocket.WebSocketOutboundHandler">
+				<constructor-arg ref="sessionManager"/>
+			</bean>
 		</constructor-arg>
 	</bean>
+	
+	<si:channel id="generic-relay-channel"/>
 
 	<bean id="inputMessageHandler" class="org.springframework.integration.stomp.service.MessageServiceMessageHandler">
 		<constructor-arg>
 			<bean class="org.springframework.integration.stomp.service.AnnotationMessageService">
 				<constructor-arg ref="generic-output-channel"/>
+				<constructor-arg ref="generic-relay-channel"/>
 			</bean>
 		</constructor-arg>
 	</bean>
