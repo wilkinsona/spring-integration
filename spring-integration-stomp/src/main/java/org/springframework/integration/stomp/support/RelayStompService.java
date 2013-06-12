@@ -104,6 +104,10 @@ public class RelayStompService extends AbstractMessageService {
 		StompHeaders stompHeaders = new StompHeaders(message.getHeaders(), false);
 		String sessionId = stompHeaders.getSessionId();
 		RelaySession session = RelayStompService.this.relaySessions.get(sessionId);
+
+		if (command == StompCommand.DISCONNECT) {
+			session.disconnected = true;
+		}
 		Assert.notNull(session, "RelaySession not found");
 
 		try {
@@ -178,6 +182,8 @@ public class RelayStompService extends AbstractMessageService {
 
 	private final static class RelaySession {
 
+		private volatile boolean disconnected;
+
 		private Socket socket;
 
 		private InputStream inputStream;
@@ -234,17 +240,28 @@ public class RelayStompService extends AbstractMessageService {
 					}
 				}
 				logger.debug("Socket closed, STOMP session=" + sessionId);
-				sendErrorMessage("Lost connection");
+
+				if (!session.disconnected) {
+					logger.warn("Socked closed unexpectedly: sending error message");
+					sendErrorMessage("Lost connection", sessionId);
+				} else {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Socket closed following DISCONNECT");
+					}
+				}
 			}
 			catch (IOException e) {
 				logger.error("Socket error: " + e.getMessage());
-				clearRelaySession(sessionId);
 			}
+
+			clearRelaySession(sessionId);
 		}
 
-		private void sendErrorMessage(String message) {
+		private void sendErrorMessage(String message, String sessionId) {
 			StompHeaders stompHeaders = new StompHeaders(StompCommand.ERROR);
+			stompHeaders.setSessionId(sessionId);
 			stompHeaders.setMessage(message);
+
 			Message<byte[]> errorMessage = new GenericMessage<byte[]>(new byte[0], stompHeaders.getMessageHeaders());
 			RelayStompService.this.outputChannel.send(errorMessage);
 		}

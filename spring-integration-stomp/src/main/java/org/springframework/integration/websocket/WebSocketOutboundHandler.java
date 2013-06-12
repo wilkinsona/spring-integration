@@ -2,6 +2,8 @@ package org.springframework.integration.websocket;
 
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.integration.Message;
 import org.springframework.integration.MessagingException;
 import org.springframework.integration.core.MessageHandler;
@@ -11,6 +13,8 @@ import org.springframework.web.socket.WebSocketSession;
 
 public final class WebSocketOutboundHandler implements MessageHandler {
 
+	private final Log logger = LogFactory.getLog(getClass());
+
 	private final SessionManager sessionManager;
 
 	public WebSocketOutboundHandler(SessionManager sessionManager) {
@@ -19,7 +23,9 @@ public final class WebSocketOutboundHandler implements MessageHandler {
 
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
-		WebSocketSession session = sessionManager.retrieveSession((String)message.getHeaders().get("sessionId"));
+		String sessionId = (String)message.getHeaders().get("sessionId");
+
+		WebSocketSession session = sessionManager.retrieveSession(sessionId);
 		try {
 			WebSocketMessage<?> webSocketMessage;
 			Object payload = message.getPayload();
@@ -30,6 +36,9 @@ public final class WebSocketOutboundHandler implements MessageHandler {
 				webSocketMessage = new TextMessage((CharSequence)payload);
 			} else {
 				throw new IllegalArgumentException("The payload of 'message' must be byte[] or CharSequence");
+			}
+			if (session == null) {
+				logger.warn("Session with id '" + sessionId + "' not available. Cannot send message: " + webSocketMessage);
 			}
 			session.sendMessage(webSocketMessage);
 		} catch (IOException e) {
