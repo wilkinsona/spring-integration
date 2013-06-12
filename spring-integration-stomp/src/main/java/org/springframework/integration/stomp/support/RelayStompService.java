@@ -163,7 +163,7 @@ public class RelayStompService extends AbstractMessageService {
 
 	@Override
 	protected void processOther(Message<?> message) {
-		StompCommand command = (StompCommand) message.getHeaders().get("stompCommand");
+		StompCommand command = new StompHeaders(message.getHeaders(), false).getProtocolMessageType();
 		Assert.notNull(command, "Expected STOMP command: " + message.getHeaders());
 		forwardMessage(message, command);
 	}

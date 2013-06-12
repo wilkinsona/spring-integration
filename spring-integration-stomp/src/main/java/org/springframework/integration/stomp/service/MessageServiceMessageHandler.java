@@ -26,6 +26,8 @@ public class MessageServiceMessageHandler implements MessageHandler {
 			this.messageService.processMessage(message);
 		} else if (StompCommand.CONNECT == stompCommand) {
 			this.messageService.processConnect(message);
+		} else if (StompCommand.MESSAGE == stompCommand) {
+			this.messageService.processOther(message);
 		} else {
 			throw new MessagingException(message, "Unsupported STOMP command: " + stompCommand);
 		}

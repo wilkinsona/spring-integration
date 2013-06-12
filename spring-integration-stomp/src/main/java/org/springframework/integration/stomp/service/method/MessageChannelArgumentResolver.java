@@ -16,21 +16,12 @@
 
 package org.springframework.integration.stomp.service.method;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.core.MethodParameter;
-import org.springframework.messaging.GenericMessage;
+import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.util.Assert;
-import org.springframework.web.messaging.MessageType;
-import org.springframework.web.messaging.event.EventBus;
-import org.springframework.web.messaging.service.AbstractMessageService;
 import org.springframework.web.messaging.service.method.ArgumentResolver;
-
 
 /**
  * @author Rossen Stoyanchev
@@ -38,10 +29,7 @@ import org.springframework.web.messaging.service.method.ArgumentResolver;
  */
 public class MessageChannelArgumentResolver implements ArgumentResolver {
 
-	private static Log logger = LogFactory.getLog(MessageChannelArgumentResolver.class);
-
 	private final MessageChannel messageChannel;
-
 
 	public MessageChannelArgumentResolver(MessageChannel messageChannel) {
 		Assert.notNull(messageChannel, "messageChannel is required");
@@ -54,31 +42,17 @@ public class MessageChannelArgumentResolver implements ArgumentResolver {
 	}
 
 	@Override
-	public Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
+	public Object resolveArgument(MethodParameter parameter, final Message<?> inMessage) throws Exception {
 
-		return messageChannel;
-//		final String sessionId = (String) message.getHeaders().get("sessionId");
-//
-//		return new MessageChannel() {
-//
-//			@Override
-//			public boolean send(Message<?> message) {
-//
-//				Map<String, Object> headers = new HashMap<String, Object>(message.getHeaders());
-//				headers.put("messageType", MessageType.MESSAGE);
-//				headers.put("sessionId", sessionId);
-//				message = new GenericMessage<Object>(message.getPayload(), headers);
-//
-//				if (logger.isTraceEnabled()) {
-//					logger.trace("Sending notification: " + message);
-//				}
-//
-//				String key = AbstractMessageService.MESSAGE_KEY;
-//				MessageChannelArgumentResolver.this.eventBus.send(key, message);
-//
-//				return true;
-//			}
-//		};
+		return new MessageChannel() {
+			public boolean send(Message<?> outMessage) {
+				org.springframework.integration.Message<?> tranformedOut = MessageBuilder.withPayload(outMessage.getPayload())
+					.copyHeaders(outMessage.getHeaders())
+					.setHeader("sessionId", inMessage.getHeaders().get("sessionId"))
+					.build();
+				return messageChannel.send(tranformedOut);
+			}
+		};
 	}
 
 }

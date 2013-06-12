@@ -73,6 +73,7 @@ public class MessageReturnValueHandler implements ReturnValueHandler {
 		outHeaders.setSessionId(sessionId);
 		outHeaders.setSubscriptionId(subscriptionId);
 		if (outHeaders.getDestination() == null) {
+			// TODO This allows a custom destination to be specified. Is this too flexible?
 			outHeaders.setDestination(inHeaders.getDestination());
 		}
 
