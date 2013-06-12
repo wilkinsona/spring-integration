@@ -72,9 +72,10 @@ public class AnnotationWebSocketStompTests {
 		Message<byte[]> stompMessage = stompMessageConverter.toMessage(webSocketMessage.getPayload(),  null);
 		assertEquals("response", new String(stompMessage.getPayload()));
 
-		StompHeaders stompHeaders = new StompHeaders(stompMessage.getHeaders(), true);
-		assertEquals(StompCommand.MESSAGE, stompHeaders.getProtocolMessageType());
+		StompHeaders stompHeaders = StompHeaders.fromMessageHeaders(stompMessage.getHeaders());
+		assertEquals(StompCommand.MESSAGE, stompHeaders.getStompCommand());
 		assertEquals("/queue/bravo", stompHeaders.getDestination());
+		System.out.println(stompHeaders);
 		// TODO How do I access the subscription header?
 		// assertEquals("0", stompHeaders.getSubscription());
 		assertNotNull(stompHeaders.getMessageId());

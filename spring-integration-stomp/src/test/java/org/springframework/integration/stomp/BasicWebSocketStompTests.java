@@ -39,12 +39,12 @@ public class BasicWebSocketStompTests {
 		endpoint.handleMessage(session, textMessage);
 
 		Message<?> message = inputHandler.getMessage();
-		StompHeaders stompHeaders = getStompHeaders(message.getHeaders());
+		StompHeaders stompHeaders = StompHeaders.fromMessageHeaders(message.getHeaders());
 
-		assertEquals(StompCommand.CONNECT, stompHeaders.getProtocolMessageType());
+		assertEquals(StompCommand.CONNECT, stompHeaders.getStompCommand());
 
 		assertEquals("1.2", stompHeaders.getAcceptVersion().iterator().next());
-		assertEquals("stomp.github.org", stompHeaders.getRawHeaders().get("host"));
+		assertEquals("stomp.github.org", stompHeaders.getExternalSourceHeaders().get("host").get(0));
 		assertEquals(0, ((byte[])message.getPayload()).length);
 
 		verify(session).sendMessage(any(BinaryMessage.class));
@@ -65,19 +65,14 @@ public class BasicWebSocketStompTests {
 		endpoint.handleMessage(session, textMessage);
 
 		Message<?> message = inputHandler.getMessage();
-		StompHeaders headers = getStompHeaders(message.getHeaders());
+		StompHeaders headers = StompHeaders.fromMessageHeaders(message.getHeaders());
 
-		assertEquals(StompCommand.SEND, headers.getProtocolMessageType());
+		assertEquals(StompCommand.SEND, headers.getStompCommand());
 
 		assertEquals("/queue/a", headers.getDestination());
 		assertEquals(MediaType.TEXT_PLAIN, headers.getContentType());
 		assertEquals("hello queue a", new String((byte[])message.getPayload()));
 
 		verify(session, times(0)).sendMessage(any(WebSocketMessage.class));
-	}
-
-	private StompHeaders getStompHeaders(MessageHeaders messageHeaders) {
-		StompHeaders stompHeaders = new StompHeaders(messageHeaders, true);
-		return stompHeaders;
 	}
 }

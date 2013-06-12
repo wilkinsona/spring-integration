@@ -24,12 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.messaging.Message;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.util.Assert;
 import org.springframework.util.PathMatcher;
-import org.springframework.web.messaging.MessageType;
 import org.springframework.web.messaging.PubSubHeaders;
-import org.springframework.web.messaging.event.EventBus;
-import org.springframework.web.messaging.event.EventConsumer;
 
 
 /**
@@ -67,7 +63,7 @@ public abstract class AbstractMessageService {
 	}
 
 	protected boolean isAllowedDestination(Message<?> message) {
-		PubSubHeaders headers = new PubSubHeaders(message.getHeaders(), true);
+		PubSubHeaders headers = PubSubHeaders.fromMessageHeaders(message.getHeaders());
 		String destination = headers.getDestination();
 		if (destination == null) {
 			return true;

@@ -42,7 +42,7 @@ public final class StompToWebSocketTransformer extends AbstractStompTransformer 
 
 	@Override
 	public Message<?> transform(Message<?> message) {
-		StompHeaders stompHeaders = new StompHeaders(message.getHeaders(), false);
+		StompHeaders stompHeaders = StompHeaders.fromMessageHeaders(message.getHeaders());
 
 		byte[] payload;
 		try {
@@ -54,8 +54,10 @@ public final class StompToWebSocketTransformer extends AbstractStompTransformer 
 			throw new MessagingException(message, e);
 		}
 
-		Map<String, Object> messageHeaders = new HashMap<String, Object>(stompHeaders.getMessageHeaders());
-		messageHeaders.putAll(stompHeaders.getRawHeaders());
+		Map<String, Object> messageHeaders = new HashMap<String, Object>(stompHeaders.toMessageHeaders());
+
+		// TODO Is this required?
+		// messageHeaders.putAll(stompHeaders.getRawHeaders());
 
 		Message<byte[]> byteMessage = new GenericMessage<byte[]>(payload, messageHeaders);
 		byte[] bytes = stompMessageConverter.fromMessage(byteMessage);

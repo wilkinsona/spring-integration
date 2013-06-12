@@ -74,7 +74,7 @@ public class RelayStompService extends AbstractMessageService {
 			return;
 		}
 
-		StompHeaders stompHeaders = new StompHeaders(message.getHeaders(), false);
+		StompHeaders stompHeaders = StompHeaders.fromMessageHeaders(message.getHeaders());
 		String sessionId = stompHeaders.getSessionId();
 
 		RelaySession session = new RelaySession();
@@ -101,7 +101,7 @@ public class RelayStompService extends AbstractMessageService {
 			return;
 		}
 
-		StompHeaders stompHeaders = new StompHeaders(message.getHeaders(), false);
+		StompHeaders stompHeaders = StompHeaders.fromMessageHeaders(message.getHeaders());
 		String sessionId = stompHeaders.getSessionId();
 		RelaySession session = RelayStompService.this.relaySessions.get(sessionId);
 
@@ -111,12 +111,11 @@ public class RelayStompService extends AbstractMessageService {
 		Assert.notNull(session, "RelaySession not found");
 
 		try {
-			if (stompHeaders.getProtocolMessageType() == null) {
-				stompHeaders.setProtocolMessageType(StompCommand.SEND);
-			}
+			stompHeaders.setStompCommandIfNotSet(StompCommand.SEND);
+
 			MediaType contentType = stompHeaders.getContentType();
 			byte[] payload = this.payloadConverter.convertToPayload(message.getPayload(), contentType);
-			Message<byte[]> byteMessage = new GenericMessage<byte[]>(payload, stompHeaders.getMessageHeaders());
+			Message<byte[]> byteMessage = new GenericMessage<byte[]>(payload, stompHeaders.toMessageHeaders());
 
 			if (logger.isTraceEnabled()) {
 				logger.trace("Forwarding: " + byteMessage);
@@ -167,7 +166,7 @@ public class RelayStompService extends AbstractMessageService {
 
 	@Override
 	protected void processOther(Message<?> message) {
-		StompCommand command = new StompHeaders(message.getHeaders(), false).getProtocolMessageType();
+		StompCommand command = StompHeaders.fromMessageHeaders(message.getHeaders()).getStompCommand();
 		Assert.notNull(command, "Expected STOMP command: " + message.getHeaders());
 		forwardMessage(message, command);
 	}
@@ -258,11 +257,11 @@ public class RelayStompService extends AbstractMessageService {
 		}
 
 		private void sendErrorMessage(String message, String sessionId) {
-			StompHeaders stompHeaders = new StompHeaders(StompCommand.ERROR);
+			StompHeaders stompHeaders = StompHeaders.create(StompCommand.ERROR);
 			stompHeaders.setSessionId(sessionId);
 			stompHeaders.setMessage(message);
 
-			Message<byte[]> errorMessage = new GenericMessage<byte[]>(new byte[0], stompHeaders.getMessageHeaders());
+			Message<byte[]> errorMessage = new GenericMessage<byte[]>(new byte[0], stompHeaders.toMessageHeaders());
 			RelayStompService.this.outputChannel.send(errorMessage);
 		}
 	}

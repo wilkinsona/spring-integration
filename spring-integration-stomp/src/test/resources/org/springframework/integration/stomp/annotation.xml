@@ -37,7 +37,9 @@
 	</si:transformer>
 	
 	<si:transformer input-channel="generic-output-channel" output-channel="stomp-output-channel">
-		<bean class="org.springframework.integration.stomp.GenericToStompTransformer"/>
+		<bean class="org.springframework.integration.stomp.GenericToStompTransformer">
+			<constructor-arg value="#{T(org.springframework.web.messaging.stomp.StompCommand).MESSAGE}"/>
+		</bean>
 	</si:transformer>
 
 	<bean class="org.springframework.integration.endpoint.EventDrivenConsumer">

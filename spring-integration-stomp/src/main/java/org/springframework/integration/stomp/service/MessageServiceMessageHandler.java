@@ -17,7 +17,7 @@ public class MessageServiceMessageHandler implements MessageHandler {
 	@Override
 	public void handleMessage(Message<?> message) throws MessagingException {
 
-		StompHeaders stompHeaders = new StompHeaders(message.getHeaders(), false);
+		StompHeaders stompHeaders = StompHeaders.fromMessageHeaders(message.getHeaders());
 		StompCommand stompCommand = stompHeaders.getStompCommand();
 
 		if (StompCommand.SUBSCRIBE == stompCommand) {

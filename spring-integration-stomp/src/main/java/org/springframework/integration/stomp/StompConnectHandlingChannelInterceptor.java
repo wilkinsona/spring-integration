@@ -19,11 +19,11 @@ public final class StompConnectHandlingChannelInterceptor extends ChannelInterce
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		StompHeaders connectHeaders = new StompHeaders(message.getHeaders(), false);
-		if (connectHeaders.getProtocolMessageType() == StompCommand.CONNECT) {
+		StompHeaders stompHeaders = StompHeaders.fromMessageHeaders(message.getHeaders());
+		if (stompHeaders.getStompCommand() == StompCommand.CONNECT) {
 
-			StompHeaders connectedHeaders = new StompHeaders(StompCommand.CONNECTED);
-			Set<String> acceptVersions = connectHeaders.getAcceptVersion();
+			StompHeaders connectedHeaders = StompHeaders.create(StompCommand.CONNECTED);
+			Set<String> acceptVersions = stompHeaders.getAcceptVersion();
 			if (acceptVersions.contains("1.2")) {
 				connectedHeaders.setVersion("1.2");
 			}
@@ -35,10 +35,10 @@ public final class StompConnectHandlingChannelInterceptor extends ChannelInterce
 			}
 			connectedHeaders.setHeartbeat(0, 0);
 
-			connectedHeaders.setSessionId(connectHeaders.getSessionId());
+			connectedHeaders.setSessionId(stompHeaders.getSessionId());
 
 			Message<String> connectedMessage = MessageBuilder.withPayload("")
-				.copyHeaders(connectedHeaders.getMessageHeaders())
+				.copyHeaders(connectedHeaders.toMessageHeaders())
 				.build();
 
 			this.outputChannel.send(connectedMessage);

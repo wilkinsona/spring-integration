@@ -8,38 +8,27 @@ import org.springframework.web.messaging.stomp.StompHeaders;
 
 public class GenericToStompTransformer implements Transformer {
 
-	private final StompCommand defaultProtocolMessageType;
+	private final StompCommand defaultStompCommand;
 
-	public GenericToStompTransformer(StompCommand defaultProtocolMessageType) {
-		this.defaultProtocolMessageType = defaultProtocolMessageType;
+	public GenericToStompTransformer(StompCommand defaultStompCommand) {
+		this.defaultStompCommand = defaultStompCommand;
 	}
 
 	@Override
 	public Message<?> transform(Message<?> message) {
 
-		StompHeaders stompHeaders = new StompHeaders(message.getHeaders(), false);
-		if (stompHeaders.getProtocolMessageType() == null) {
-			stompHeaders.setProtocolMessageType(this.defaultProtocolMessageType);
-		}
+		StompHeaders stompHeaders = StompHeaders.fromMessageHeaders(message.getHeaders());
+		stompHeaders.setStompCommandIfNotSet(this.defaultStompCommand);
+
+		StompCommand stompCommand = stompHeaders.getStompCommand();
 
 		// TODO Proper heartbeat handling
-		if (stompHeaders.getHeartbeat() == null) {
+		if (stompCommand == StompCommand.CONNECTED || stompCommand == StompCommand.CONNECT) {
 			stompHeaders.setHeartbeat(0, 0);
 		}
 
-		if (stompHeaders.getProtocolMessageType() == StompCommand.MESSAGE) {
-			// TODO Remove once using Rossen's update that handles this automatically
-			if (stompHeaders.getMessageId() == null) {
-				stompHeaders.setMessageId(message.getHeaders().getId().toString());
-			}
-			stompHeaders.setSubscriptionId((String)message.getHeaders().get("subscriptionId"));
-		}
-
-		// TODO need both raw and message headers to make sure all headers are retained. Is this the right approach?
 		return MessageBuilder.withPayload(message.getPayload())
-			.copyHeaders(stompHeaders.getRawHeaders())
-			.copyHeaders(stompHeaders.getMessageHeaders())
+			.copyHeaders(stompHeaders.toMessageHeaders())
 			.build();
 	}
-
 }
