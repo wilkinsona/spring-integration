@@ -12,8 +12,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.integration.Message;
-import org.springframework.integration.MessageHeaders;
-import org.springframework.integration.websocket.TestMessageHandler;
 import org.springframework.integration.websocket.WebSocketMessageDrivenEndpoint;
 import org.springframework.web.messaging.stomp.StompCommand;
 import org.springframework.web.messaging.stomp.StompHeaders;

@@ -48,6 +48,6 @@
 		</constructor-arg>
 	</bean>
 
-	<bean id="inputMessageHandler" class="org.springframework.integration.websocket.TestMessageHandler"/>
+	<bean id="inputMessageHandler" class="org.springframework.integration.stomp.TestMessageHandler"/>
 
 </beans>

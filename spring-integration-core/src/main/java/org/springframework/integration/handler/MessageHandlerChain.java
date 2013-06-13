@@ -153,11 +153,6 @@ public class MessageHandlerChain extends AbstractMessageHandler implements Messa
 						nextHandler.handleMessage(message);
 						return true;
 					}
-
-					@Override
-					public boolean send(org.springframework.messaging.Message<?> message) {
-						return send((Message<?>)message);
-					}
 				};
 				((MessageProducer) handler).setOutputChannel(nextChannel);
 
@@ -298,11 +293,6 @@ public class MessageHandlerChain extends AbstractMessageHandler implements Messa
 	}
 
 	private class ReplyForwardingMessageChannel implements MessageChannel {
-
-		@Override
-		public boolean send(org.springframework.messaging.Message<?> message) {
-			return send((Message<?>)message);
-		}
 
 		public boolean send(Message<?> message) {
 			return this.send(message, -1);

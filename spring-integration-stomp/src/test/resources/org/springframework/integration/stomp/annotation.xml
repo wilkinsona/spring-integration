@@ -44,7 +44,11 @@
 
 	<bean class="org.springframework.integration.endpoint.EventDrivenConsumer">
 		<constructor-arg ref="stomp-input-channel"/>
-		<constructor-arg ref="inputMessageHandler"/>
+		<constructor-arg>
+			<bean class="org.springframework.integration.stomp.SpringToSiMessageHandler">
+				<constructor-arg ref="input-message-handler"/>
+			</bean>
+		</constructor-arg>
 	</bean>
 
 	<bean class="org.springframework.integration.endpoint.EventDrivenConsumer">
@@ -56,13 +60,17 @@
 		</constructor-arg>
 	</bean>
 	
-	<si:channel id="generic-relay-channel"/>
+	<si:publish-subscribe-channel id="generic-relay-channel"/>
 
-	<bean id="inputMessageHandler" class="org.springframework.integration.stomp.service.MessageServiceMessageHandler">
+	<bean id="input-message-handler" class="org.springframework.web.messaging.service.method.AnnotationPubSubMessageHandler">
 		<constructor-arg>
-			<bean class="org.springframework.integration.stomp.service.AnnotationMessageService">
-				<constructor-arg ref="generic-output-channel"/>
+			<bean class="org.springframework.integration.stomp.SiToSpringSubscribableChannel">
 				<constructor-arg ref="generic-relay-channel"/>
+			</bean>
+		</constructor-arg>
+		<constructor-arg>
+			<bean class="org.springframework.integration.stomp.SiToSpringMessageChannel">
+				<constructor-arg ref="generic-output-channel"/>
 			</bean>
 		</constructor-arg>
 	</bean>

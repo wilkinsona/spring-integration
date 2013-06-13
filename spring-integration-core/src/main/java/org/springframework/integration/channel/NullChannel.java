@@ -56,9 +56,4 @@ public class NullChannel implements PollableChannel {
 	public Message<?> receive(long timeout) {
 		return this.receive();
 	}
-
-	@Override
-	public boolean send(org.springframework.messaging.Message<?> message) {
-		return send((Message<?>)message);
-	}
 }

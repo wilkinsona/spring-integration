@@ -1,4 +1,4 @@
-package org.springframework.integration.websocket;
+package org.springframework.integration.stomp;
 
 import org.springframework.integration.Message;
 import org.springframework.integration.MessagingException;

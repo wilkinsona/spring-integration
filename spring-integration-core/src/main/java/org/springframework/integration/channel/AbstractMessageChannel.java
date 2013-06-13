@@ -269,14 +269,4 @@ public abstract class AbstractMessageChannel extends IntegrationObjectSupport im
 			return message;
 		}
 	}
-
-
-	@Override
-	public boolean send(org.springframework.messaging.Message<?> message) {
-		if (message instanceof Message) {
-			return send((Message<?>)message);
-		} else {
-			return send(MessageBuilder.withPayload(message.getPayload()).copyHeaders(message.getHeaders()).build());
-		}
-	}
 }
