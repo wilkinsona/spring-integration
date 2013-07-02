@@ -455,6 +455,72 @@
 		</xsd:complexType>
 	</xsd:element>
 
+	<xsd:element name="ring-buffer-channel">
+		<xsd:annotation>
+			<xsd:documentation>
+				Defines a channel that uses a RingBuffer to pass messages from the thread on which they're
+				sent to the channel to a separate thread used to dispatch messages to subscribed handlers.
+			</xsd:documentation>
+			<xsd:appinfo>
+				<tool:annotation>
+					<tool:exports type="org.springframework.integration.MessageChannel" />
+				</tool:annotation>
+			</xsd:appinfo>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="channelType">
+					<xsd:sequence>
+						<xsd:element name="interceptors" type="channelInterceptorsType" minOccurs="0" maxOccurs="1">
+							<xsd:annotation>
+								<xsd:documentation><![CDATA[
+									A list of ChannelInterceptor instances whose preSend and postSend methods
+									will be applied to this channel. Note that the preReceive and postReceive
+									methods have no effect for a SubscribableChannel instance.
+								]]></xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+						<xsd:element name="dispatcher" type="dispatcherType" minOccurs="0" maxOccurs="1">
+							<xsd:annotation>
+								<xsd:documentation>Provides MessageDispatcher configuration
+									(i.e., failover and load-balancing)</xsd:documentation>
+								</xsd:annotation>
+							</xsd:element>
+					</xsd:sequence>
+					<xsd:attribute name="error-handler" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation>
+							<![CDATA[
+								Provides reference to a bean that implements
+								org.springframework.util.ErrorHandler and
+								provides a strategy for handling errors.
+								This is especially useful for handling errors
+								that occur during asynchronous execution of tasks
+								that have been submitted to a TaskScheduler, where
+								it may not be possible to throw the error to the
+								original caller.
+							]]>
+							</xsd:documentation>
+							<xsd:appinfo>
+								<tool:annotation kind="ref">
+									<tool:expected-type type="org.springframework.util.ErrorHandler" />
+								</tool:annotation>
+							</xsd:appinfo>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="size" type="xsd:int">
+						<xsd:annotation>
+							<xsd:documentation><![CDATA[
+								The size of the RingBuffer. If not specified, the default size of 1024
+								is used.
+							]]></xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
 	<xsd:complexType name="channelType">
 		<xsd:annotation>
 			<xsd:documentation>

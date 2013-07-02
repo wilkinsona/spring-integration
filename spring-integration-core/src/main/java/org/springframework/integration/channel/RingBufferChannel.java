@@ -18,7 +18,9 @@ package org.springframework.integration.channel;
 
 import org.springframework.context.Lifecycle;
 import org.springframework.integration.Message;
+import org.springframework.integration.dispatcher.LoadBalancingStrategy;
 import org.springframework.integration.dispatcher.MessageDispatcher;
+import org.springframework.integration.dispatcher.RoundRobinLoadBalancingStrategy;
 import org.springframework.integration.dispatcher.UnicastingDispatcher;
 import org.springframework.integration.disruptor.MessageEvent;
 import org.springframework.integration.disruptor.MessageEventDisruptor;
@@ -36,11 +38,35 @@ import com.lmax.disruptor.RingBuffer;
  */
 public final class RingBufferChannel extends AbstractSubscribableChannel implements Lifecycle {
 
-	private final MessageDispatcher dispatcher = new UnicastingDispatcher();
+	private static final int DEFAULT_SIZE = 1024;
+
+	private final UnicastingDispatcher dispatcher = new UnicastingDispatcher();
 
 	private final MessageEventDisruptor disruptor;
 
+	private volatile ErrorHandler errorHandler;
+
 	private volatile boolean running;
+
+	/**
+	 * Creates a new RingBufferChannel that will use a ring buffer containing 1024 slots
+	 * to buffer messages.
+	 */
+	public RingBufferChannel() {
+		this(DEFAULT_SIZE);
+	}
+
+	/**
+	 * Creates a new RingBufferChannel that will use a ring buffer containing 1024 slots
+	 * to buffer messages and the given {@code loadBalancingStrategy} when dispatching
+	 * messages.
+	 *
+	 * @param loadBalancingStrategy the load-balancing strategy to use when dispatching
+	 *                              messages
+	 */
+	public RingBufferChannel(LoadBalancingStrategy loadBalancingStrategy) {
+		this(DEFAULT_SIZE, loadBalancingStrategy);
+	}
 
 	/**
 	 * Creates a new RingBufferChannel that will use a ring buffer of the given {@code
@@ -49,7 +75,53 @@ public final class RingBufferChannel extends AbstractSubscribableChannel impleme
 	 * @param size The size of the underlying ring buffer
 	 */
 	public RingBufferChannel(int size) {
+		this(size, new RoundRobinLoadBalancingStrategy());
+	}
+
+	/**
+	 * Creates a new RingBufferChannel that will use a ring buffer of the given {@code
+	 * size} to buffer messages and the given {@code loadBalancingStrategy} when
+	 * dispatching messages.
+	 *
+	 * @param size The size of the underlying ring buffer
+	 * @param loadBalancingStrategy the load-balancing strategy to use when dispatching
+	 *                              messages
+	 */
+	public RingBufferChannel(int size, LoadBalancingStrategy loadBalancingStrategy) {
 		this.disruptor = new MessageEventDisruptor(size);
+		this.dispatcher.setLoadBalancingStrategy(loadBalancingStrategy);
+	}
+
+	/**
+	 * Provide an {@link ErrorHandler} strategy for handling Exceptions that occur
+	 * downstream from this channel. If no ErrorHandler is provided the default
+	 * strategy is a {@link MessagePublishingErrorHandler} that sends error messages to
+	 * the failed request Message's error channel header if available or to the default
+	 * 'errorChannel' otherwise.
+	 *
+	 * @param ErrorHandler the error handler to be used by this channel
+	 */
+	public void setErrorHandler(ErrorHandler errorHandler) {
+		this.errorHandler = errorHandler;
+	}
+
+	/**
+	 * Specify whether the channel's dispatcher should have failover enabled. By default,
+	 * it will. Set this value to {@code false} to disable it.
+	 *
+	 * @param failover {@code true} if failure should be enabled, otherwise {@code false}.
+	 */
+	public void setFailover(boolean failover) {
+		this.dispatcher.setFailover(failover);
+	}
+
+	/**
+	 * Specify the maximum number of subscribers supported by the channel's dispatcher.
+	 *
+	 * @param maxSubscribers The maximum number of subscribers
+	 */
+	public void setMaxSubscribers(int maxSubscribers) {
+		this.dispatcher.setMaxSubscribers(maxSubscribers);
 	}
 
 	@Override
@@ -64,8 +136,10 @@ public final class RingBufferChannel extends AbstractSubscribableChannel impleme
 	}
 
 	protected void onInit() {
-		ErrorHandler errorHandler = new MessagePublishingErrorHandler(new BeanFactoryChannelResolver(this.getBeanFactory()));
-		this.disruptor.init(new MessageEventHandler(getDispatcher()), errorHandler);
+		if (this.errorHandler == null) {
+			this.errorHandler = new MessagePublishingErrorHandler(new BeanFactoryChannelResolver(this.getBeanFactory()));
+		}
+		this.disruptor.init(new MessageEventHandler(getDispatcher()), this.errorHandler);
 	}
 
 	@Override
