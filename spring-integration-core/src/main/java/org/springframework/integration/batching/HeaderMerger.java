@@ -14,34 +14,29 @@
  * limitations under the License.
  */
 
-package org.springframework.integration.disruptor;
+package org.springframework.integration.batching;
+
+import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.integration.Message;
 
 /**
- * A reusable holder for a message, intended for use with a {@link MessageEventDisruptor}.
+ * A strategy interface for merging together the headers of multiple messages
  *
  * @author Andy Wilkinson
+ *
  */
-public final class MessageEvent {
-
-	private volatile Message<?> message;
+public interface HeaderMerger {
 
 	/**
-	 * Gets the event's message
+	 * Returns a map of headers that is the result of merging together the headers of the
+	 * given messages
 	 *
-	 * @return the message
+	 * @param messages The messages whose headers are to be merged
+	 *
+	 * @return The merged headers
 	 */
-	public Message<?> getMessage() {
-		return message;
-	}
+	public Map<String, Object> mergeHeaders(Collection<Message<?>> messages);
 
-	/**
-	 * Sets the event's message
-	 *
-	 * @param message the message
-	 */
-	public void setMessage(Message<?> message) {
-		this.message = message;
-	}
 }

@@ -14,34 +14,28 @@
  * limitations under the License.
  */
 
-package org.springframework.integration.disruptor;
+package org.springframework.integration.batching;
+
+import java.util.List;
 
 import org.springframework.integration.Message;
 
 /**
- * A reusable holder for a message, intended for use with a {@link MessageEventDisruptor}.
+ * A message batcher is used to combine several messages into a batch represented by a
+ * single message.
  *
  * @author Andy Wilkinson
+ *
  */
-public final class MessageEvent {
-
-	private volatile Message<?> message;
+public interface MessageBatcher {
 
 	/**
-	 * Gets the event's message
+	 * Returns a single message that represents the given batch of {@code messages}.
 	 *
-	 * @return the message
+	 * @param messages The batch of messages
+	 *
+	 * @return A single message that represents the batch
 	 */
-	public Message<?> getMessage() {
-		return message;
-	}
+	Message<?> batchMessages(List<Message<?>> messages);
 
-	/**
-	 * Sets the event's message
-	 *
-	 * @param message the message
-	 */
-	public void setMessage(Message<?> message) {
-		this.message = message;
-	}
 }

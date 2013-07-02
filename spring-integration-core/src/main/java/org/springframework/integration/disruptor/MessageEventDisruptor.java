@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 
 /**
- * A helper class to ease the use of an LMAX {@link Distruptor} and {@link RingBuffer} to pass
- * messages between threads.
+ * A helper class to ease the use of an LMAX {@link Distruptor} and {@link RingBuffer}
+ * to pass messages between threads.
  *
  * @author Andy Wilkinson
  *
@@ -46,8 +46,8 @@ public final class MessageEventDisruptor {
 	private volatile RingBuffer<MessageEvent> ringBuffer;
 
 	/**
-	 * Creates a {@code MessageEventDisruptor} that will use a ring buffer with the given {@code
-	 * bufferSize} that uses the given {@code eventHandler} to handle events.
+	 * Creates a {@code MessageEventDisruptor} that will use a ring buffer with the given
+	 * {@code bufferSize} that uses the given {@code eventHandler} to handle events.
 	 *
 	 * @param bufferSize The size of the ring buffer
 	 */
@@ -63,8 +63,8 @@ public final class MessageEventDisruptor {
 	}
 
 	/**
-	 * Publishes the given message to the distruptor's ring buffer. Prior
-	 * to publishing messages, the distruptor must have been {@link #start() started}.
+	 * Publishes the given message to the distruptor's ring buffer. Prior to publishing
+	 * messages, the distruptor must have been {@link #start() started}.
 	 *
 	 * @param message The message to publish
 	 */

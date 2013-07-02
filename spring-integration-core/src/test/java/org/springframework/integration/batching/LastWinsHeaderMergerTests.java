@@ -14,34 +14,31 @@
  * limitations under the License.
  */
 
-package org.springframework.integration.disruptor;
+package org.springframework.integration.batching;
 
-import org.springframework.integration.Message;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Map;
+
+import org.junit.Test;
 
 /**
- * A reusable holder for a message, intended for use with a {@link MessageEventDisruptor}.
- *
  * @author Andy Wilkinson
  */
-public final class MessageEvent {
+public final class LastWinsHeaderMergerTests extends AbstractHeaderMergerTests {
 
-	private volatile Message<?> message;
-
-	/**
-	 * Gets the event's message
-	 *
-	 * @return the message
-	 */
-	public Message<?> getMessage() {
-		return message;
+	public LastWinsHeaderMergerTests() {
+		super(new LastWinsHeaderMerger());
 	}
 
-	/**
-	 * Sets the event's message
-	 *
-	 * @param message the message
-	 */
-	public void setMessage(Message<?> message) {
-		this.message = message;
+	@Test
+	public void lastHeaderWinsWhenHeadersConflict() {
+		Map<String, Object> mergedHeaders = getMergedConflictingHeaders();
+		assertNotNull(mergedHeaders);
+		assertEquals(2, mergedHeaders.size());
+		assertEquals("value3", mergedHeaders.get("k1"));
+		assertEquals(4, mergedHeaders.get("k2"));
 	}
+
 }

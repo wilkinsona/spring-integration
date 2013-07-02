@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,9 @@ import org.springframework.integration.Message;
 import org.springframework.integration.MessageChannel;
 import org.springframework.integration.support.MessageBuilder;
 
+/**
+ * @author Andy Wilkinson
+ */
 public final class BatchingMessageHandlerTests {
 
 	@Test
@@ -39,7 +42,9 @@ public final class BatchingMessageHandlerTests {
 		final CountDownLatch latch = new CountDownLatch(messages);
 		final AtomicInteger batches = new AtomicInteger();
 
-		BatchingMessageHandler messageHandler = new BatchingMessageHandler(1024, 16, new MessageChannel() {
+		BatchingMessageHandler messageHandler = new BatchingMessageHandler(1024, 16);
+
+		messageHandler.setOutputChannel(new MessageChannel() {
 
 			@SuppressWarnings("unchecked")
 			@Override
@@ -68,6 +73,7 @@ public final class BatchingMessageHandlerTests {
 		messageHandler.setBeanFactory(mock(BeanFactory.class));
 		messageHandler.onInit();
 		messageHandler.start();
+
 		try {
 			for (int i = 0; i < messages; i++) {
 				messageHandler.handleMessage(MessageBuilder.withPayload("test").build());

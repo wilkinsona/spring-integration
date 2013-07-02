@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,8 @@ public final class RingBufferChannel extends AbstractSubscribableChannel impleme
 	private volatile boolean running;
 
 	/**
-	 * Creates a new RingBufferChannel that will use a ring buffer of the given {@code size} to
-	 * buffer messages.
+	 * Creates a new RingBufferChannel that will use a ring buffer of the given {@code
+	 * size} to buffer messages.
 	 *
 	 * @param size The size of the underlying ring buffer
 	 */
