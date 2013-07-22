@@ -28,10 +28,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
-
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.integration.Message;
 import org.springframework.integration.core.MessageHandler;
+import org.springframework.integration.core.RingBufferTaskExecutor;
 import org.springframework.integration.dispatcher.RoundRobinLoadBalancingStrategy;
 import org.springframework.integration.message.GenericMessage;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
@@ -156,6 +156,23 @@ public class ExecutorChannelTests {
 		assertEquals(numberOfMessages, handler2.count.get());
 	}
 
+	@Test
+	public void verifyUseOfARingBufferTaskExecutor() throws Exception {
+		RingBufferTaskExecutor taskExecutor = new RingBufferTaskExecutor(1024);
+		taskExecutor.start();
+		try {
+			ExecutorChannel channel = new ExecutorChannel(taskExecutor);
+			CountDownLatch latch = new CountDownLatch(1);
+			TestHandler handler = new TestHandler(latch);
+			channel.subscribe(handler);
+			channel.send(new GenericMessage<String>("test"));
+			assertTrue(latch.await(1000, TimeUnit.MILLISECONDS));
+			assertNotNull(handler.thread);
+			assertFalse(Thread.currentThread().equals(handler.thread));
+		} finally {
+			taskExecutor.stop();
+		}
+	}
 
 	private static class TestHandler implements MessageHandler {
 
