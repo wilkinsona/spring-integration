@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.context.Lifecycle;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.integration.Message;
 import org.springframework.integration.MessageChannel;
 import org.springframework.integration.MessagingException;
@@ -47,7 +47,7 @@ import com.lmax.disruptor.RingBuffer;
  * @author Andy Wilkinson
  *
  */
-public final class BatchingMessageHandler extends AbstractMessageHandler implements Lifecycle, MessageProducer {
+public final class BatchingMessageHandler extends AbstractMessageHandler implements SmartLifecycle, MessageProducer {
 
 	private final MessagingTemplate messagingTemplate = new MessagingTemplate();
 
@@ -55,7 +55,9 @@ public final class BatchingMessageHandler extends AbstractMessageHandler impleme
 
 	private final EventHandler<MessageEvent> eventHandler;
 
-	private volatile boolean running;
+	private final Object lifecycleMonitor = new Object();
+
+	private boolean running;
 
 	private volatile MessageChannel outputChannel;
 
@@ -96,19 +98,45 @@ public final class BatchingMessageHandler extends AbstractMessageHandler impleme
 
 	@Override
 	public void start() {
-		disruptor.start();
-		this.running = true;
+		synchronized (this.lifecycleMonitor) {
+			if (!this.running) {
+				disruptor.start();
+				this.running = true;
+			}
+		}
 	}
 
 	@Override
 	public void stop() {
-		disruptor.stop();
-		this.running = false;
+		synchronized (this.lifecycleMonitor) {
+			if (this.running) {
+				disruptor.stop();
+				this.running = false;
+			}
+		}
 	}
 
 	@Override
 	public boolean isRunning() {
-		return this.running;
+		synchronized (this.lifecycleMonitor) {
+			return this.running;
+		}
+	}
+
+	@Override
+	public int getPhase() {
+		return 0;
+	}
+
+	@Override
+	public boolean isAutoStartup() {
+		return true;
+	}
+
+	@Override
+	public void stop(Runnable callback) {
+		stop();
+		callback.run();
 	}
 
 	@Override

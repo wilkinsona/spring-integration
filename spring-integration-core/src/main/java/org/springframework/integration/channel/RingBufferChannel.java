@@ -16,7 +16,7 @@
 
 package org.springframework.integration.channel;
 
-import org.springframework.context.Lifecycle;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.integration.Message;
 import org.springframework.integration.dispatcher.LoadBalancingStrategy;
 import org.springframework.integration.dispatcher.MessageDispatcher;
@@ -36,7 +36,7 @@ import com.lmax.disruptor.RingBuffer;
  *
  * @author Andy Wilkinson
  */
-public final class RingBufferChannel extends AbstractSubscribableChannel implements Lifecycle {
+public final class RingBufferChannel extends AbstractSubscribableChannel implements SmartLifecycle {
 
 	private static final int DEFAULT_SIZE = 1024;
 
@@ -44,9 +44,11 @@ public final class RingBufferChannel extends AbstractSubscribableChannel impleme
 
 	private final MessageEventDisruptor disruptor;
 
-	private volatile ErrorHandler errorHandler;
+	private final Object lifecycleMonitor = new Object();
 
-	private volatile boolean running;
+	private boolean running;
+
+	private volatile ErrorHandler errorHandler;
 
 	/**
 	 * Creates a new RingBufferChannel that will use a ring buffer containing 1024 slots
@@ -72,7 +74,7 @@ public final class RingBufferChannel extends AbstractSubscribableChannel impleme
 	 * Creates a new RingBufferChannel that will use a ring buffer of the given {@code
 	 * size} to buffer messages.
 	 *
-	 * @param size The size of the underlying ring buffer
+	 * @param size The size of the underlying ring buffer. Must be a power of two.
 	 */
 	public RingBufferChannel(int size) {
 		this(size, new RoundRobinLoadBalancingStrategy());
@@ -83,7 +85,7 @@ public final class RingBufferChannel extends AbstractSubscribableChannel impleme
 	 * size} to buffer messages and the given {@code loadBalancingStrategy} when
 	 * dispatching messages.
 	 *
-	 * @param size The size of the underlying ring buffer
+	 * @param size The size of the underlying ring buffer. Must be a power of two.
 	 * @param loadBalancingStrategy the load-balancing strategy to use when dispatching
 	 *                              messages
 	 */
@@ -144,19 +146,45 @@ public final class RingBufferChannel extends AbstractSubscribableChannel impleme
 
 	@Override
 	public void start() {
-		this.disruptor.start();
-		this.running = true;
+		synchronized (this.lifecycleMonitor) {
+			if (!this.running) {
+				this.disruptor.start();
+				this.running = true;
+			}
+		}
 	}
 
 	@Override
 	public void stop() {
-		this.running = false;
-		this.disruptor.stop();
+		synchronized (this.lifecycleMonitor) {
+			if (this.running) {
+				this.disruptor.stop();
+				this.running = false;
+			}
+		}
 	}
 
 	@Override
 	public boolean isRunning() {
-		return this.running;
+		synchronized (this.lifecycleMonitor) {
+			return this.running;
+		}
+	}
+
+	@Override
+	public int getPhase() {
+		return 0;
+	}
+
+	@Override
+	public boolean isAutoStartup() {
+		return true;
+	}
+
+	@Override
+	public void stop(Runnable callback) {
+		stop();
+		callback.run();
 	}
 
 	private static final class MessageEventHandler implements EventHandler<MessageEvent> {

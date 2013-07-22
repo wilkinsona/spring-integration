@@ -22,10 +22,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.integration.Message;
 import org.springframework.integration.MessageDeliveryException;
+import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
 
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.InsufficientCapacityException;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -47,7 +49,7 @@ public final class MessageEventDisruptor {
 
 	/**
 	 * Creates a {@code MessageEventDisruptor} that will use a ring buffer with the given
-	 * {@code bufferSize} that uses the given {@code eventHandler} to handle events.
+	 * {@code bufferSize}.
 	 *
 	 * @param bufferSize The size of the ring buffer
 	 */
@@ -64,7 +66,8 @@ public final class MessageEventDisruptor {
 
 	/**
 	 * Publishes the given message to the distruptor's ring buffer. Prior to publishing
-	 * messages, the distruptor must have been {@link #start() started}.
+	 * messages, the disruptor must have been {@link #start() started}. If the ring buffer
+	 * is full a {@link MessageDeliveryException} is thrown.
 	 *
 	 * @param message The message to publish
 	 */
@@ -80,14 +83,27 @@ public final class MessageEventDisruptor {
 		try {
 			MessageEvent messageEvent = this.ringBuffer.get(sequence);
 			messageEvent.setMessage(message);
-			this.ringBuffer.publish(sequence);
 		} finally {
 			this.ringBuffer.publish(sequence);
 		}
 	}
 
+	/**
+	 * Initializes the disruptor to use the given {@code eventHandler} and {@code
+	 * errorHandler}. The event handler will be called to handle every event that's
+	 * {@link #publish(Message) published}. The error handler is called to handle any
+	 * errors that occurs during event handling. To prevent further event processing
+	 * the error handler may itself throw a {@link RuntimeException}.
+	 *
+	 * @param eventHandler the event handler to use. Must not be {@code null}.
+	 * @param errorHandler the error handler to use. May be {@code null}.
+	 *
+	 * @see Disruptor#handleEventsWith(EventHandler...)
+	 * @see Disruptor#handleExceptionsWith(ExceptionHandler)
+	 */
 	@SuppressWarnings("unchecked")
 	public void init(EventHandler<MessageEvent> eventHandler, ErrorHandler errorHandler) {
+		Assert.notNull(eventHandler, "'eventHandler' must not be null");
 		this.disruptor.handleEventsWith(eventHandler);
 		if (errorHandler != null) {
 			this.disruptor.handleExceptionsWith(new ErrorHandlerExceptionHandler(errorHandler));
@@ -105,7 +121,7 @@ public final class MessageEventDisruptor {
 	 * Stops the disruptor
 	 */
 	public void stop() {
-		this.disruptor.shutdown();
+		this.disruptor.halt();
 		this.executor.shutdown();
 
 		try {
