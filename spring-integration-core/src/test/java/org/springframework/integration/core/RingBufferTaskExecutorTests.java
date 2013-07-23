@@ -16,13 +16,20 @@
 
 package org.springframework.integration.core;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.lang.Thread.State;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.springframework.core.task.TaskRejectedException;
+import org.springframework.integration.core.RingBufferTaskExecutor.ExecutionStrategy;
+
+import com.lmax.disruptor.YieldingWaitStrategy;
+import com.lmax.disruptor.dsl.ProducerType;
 
 /**
  * @author Andy Wilkinson
@@ -80,7 +87,7 @@ public final class RingBufferTaskExecutorTests {
 	}
 
 	@Test(expected=TaskRejectedException.class)
-	public void taskRejectedExceptionIsThrownWhenBufferIsFull() {
+	public void rejectWhenFullThrowsATaskRejectedExceptionWhenBufferIsFull() {
 		RingBufferTaskExecutor taskExecutor = new RingBufferTaskExecutor(1);
 		taskExecutor.start();
 
@@ -106,5 +113,73 @@ public final class RingBufferTaskExecutorTests {
 		} finally {
 			taskExecutor.stop();
 		}
+	}
+
+	@Test
+	public void blockWhenFullAllowsTaskToBeExecutedWhenBufferIsFull() throws InterruptedException {
+		final RingBufferTaskExecutor taskExecutor = new RingBufferTaskExecutor(1,
+																		       ProducerType.SINGLE,
+																		       new YieldingWaitStrategy(),
+																		       ExecutionStrategy.BLOCK_WHEN_FULL);
+		taskExecutor.start();
+
+		try {
+			final CountDownLatch blockingLatch = new CountDownLatch(1);
+			final CountDownLatch completionLatch = new CountDownLatch(2);
+
+			final Runnable blockingTask = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						blockingLatch.await();
+						completionLatch.countDown();
+					} catch (InterruptedException e) {
+					}
+				}
+			};
+
+			Thread executionThread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					taskExecutor.execute(blockingTask);
+					taskExecutor.execute(blockingTask);
+				}
+			});
+			executionThread.start();
+
+			long endTime = System.currentTimeMillis() + 5000;
+
+			State state;
+
+			do {
+				state = executionThread.getState();
+			} while (state != State.TIMED_WAITING && System.currentTimeMillis() < endTime);
+
+			if (state != State.TIMED_WAITING) {
+				fail("Thread did not reach TIMED_WAITING state within 5 seconds");
+			}
+
+			blockingLatch.countDown();
+
+			completionLatch.await(30, TimeUnit.SECONDS);
+		} finally {
+			taskExecutor.stop();
+		}
+	}
+
+	@Test
+	public void isRunning() {
+		RingBufferTaskExecutor executor = new RingBufferTaskExecutor();
+		assertFalse(executor.isRunning());
+		executor.start();
+		assertTrue(executor.isRunning());
+		executor.stop();
+		assertFalse(executor.isRunning());
+	}
+
+	@Test
+	public void isStartedAutomatically() {
+		RingBufferTaskExecutor executor = new RingBufferTaskExecutor();
+		assertTrue(executor.isAutoStartup());
 	}
 }
