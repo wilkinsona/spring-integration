@@ -20,7 +20,6 @@ import java.lang.reflect.Method;
 
 import org.springframework.integration.annotation.Router;
 import org.springframework.integration.handler.MethodInvokingMessageProcessor;
-import org.springframework.integration.support.channel.ChannelResolver;
 
 /**
  * A Message Router that invokes the specified method on the given object. The
@@ -28,7 +27,7 @@ import org.springframework.integration.support.channel.ChannelResolver;
  * String to be interpreted as a channel name, or a Collection (or Array) of
  * either type. If the method returns channel names, then a
  * {@link ChannelResolver} is required.
- * 
+ *
  * @author Mark Fisher
  */
 public class MethodInvokingRouter extends AbstractMessageProcessingRouter {

@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
 import org.springframework.context.SmartLifecycle;
-import org.springframework.integration.Message;
+import org.springframework.messaging.Message;
 import org.springframework.integration.MessageHandlingException;
 import org.springframework.integration.handler.AbstractMessageHandler;
 import org.springframework.integration.ip.IpHeaders;
@@ -85,7 +85,7 @@ public class TcpSendingMessageHandler extends AbstractMessageHandler implements
 	/**
 	 * Writes the message payload to the underlying socket, using the specified
 	 * message format.
-	 * @see org.springframework.integration.core.MessageHandler#handleMessage(org.springframework.integration.Message)
+	 * @see org.springframework.messaging.MessageHandler#handleMessage(org.springframework.messaging.Message)
 	 */
 	@Override
 	public void handleMessageInternal(final Message<?> message) throws

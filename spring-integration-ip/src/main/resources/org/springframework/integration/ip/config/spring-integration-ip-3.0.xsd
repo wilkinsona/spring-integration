@@ -32,7 +32,7 @@
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 						</xsd:annotation>
@@ -41,7 +41,7 @@
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 							<xsd:documentation>
@@ -72,7 +72,7 @@
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 						</xsd:annotation>
@@ -130,7 +130,7 @@ task executors such as a WorkManagerTaskExecutor.
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 						</xsd:annotation>
@@ -139,7 +139,7 @@ task executors such as a WorkManagerTaskExecutor.
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 							<xsd:documentation>
@@ -192,7 +192,7 @@ task executors such as a WorkManagerTaskExecutor.
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 						</xsd:annotation>
@@ -242,7 +242,7 @@ task executors such as a WorkManagerTaskExecutor.
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 						</xsd:annotation>
@@ -251,7 +251,7 @@ task executors such as a WorkManagerTaskExecutor.
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 						</xsd:annotation>
@@ -261,7 +261,7 @@ task executors such as a WorkManagerTaskExecutor.
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 							<xsd:documentation>
@@ -314,7 +314,7 @@ task executors such as a WorkManagerTaskExecutor.
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 						</xsd:annotation>
@@ -323,7 +323,7 @@ task executors such as a WorkManagerTaskExecutor.
 						<xsd:annotation>
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
-									<tool:expected-type type="org.springframework.integration.MessageChannel"/>
+									<tool:expected-type type="org.springframework.messaging.MessageChannel"/>
 								</tool:annotation>
 							</xsd:appinfo>
 						</xsd:annotation>
@@ -630,7 +630,7 @@ setCustomHeaders(). Default is TcpMessageMapper.
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
 									<tool:expected-type
-										type="org.springframework.integration.MessageChannel" />
+										type="org.springframework.messaging.MessageChannel" />
 								</tool:annotation>
 							</xsd:appinfo>
 							<xsd:documentation>
@@ -643,7 +643,7 @@ setCustomHeaders(). Default is TcpMessageMapper.
 							<xsd:appinfo>
 								<tool:annotation kind="ref">
 									<tool:expected-type
-										type="org.springframework.integration.MessageChannel" />
+										type="org.springframework.messaging.MessageChannel" />
 								</tool:annotation>
 							</xsd:appinfo>
 							<xsd:documentation>

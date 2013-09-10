@@ -35,7 +35,7 @@ import org.w3c.dom.Element;
  * If this component is defined as the top-level element in the Spring application context it will produce
  * an {@link org.springframework.integration.endpoint.AbstractEndpoint} depending on the channel type.
  * If this component is defined as nested element (e.g., inside of the chain) it will produce
- * a {@link org.springframework.integration.core.MessageHandler}.
+ * a {@link org.springframework.messaging.MessageHandler}.
  *
  * @author Mark Fisher
  * @author Gary Russell
